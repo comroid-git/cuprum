@@ -6,14 +6,20 @@ import org.comroid.cuprum.component.Wire;
 import org.comroid.cuprum.editor.AwtEditor;
 import org.comroid.cuprum.editor.RenderObjectAdapter;
 import org.comroid.cuprum.editor.UniformRenderObject;
+import org.comroid.cuprum.editor.View;
 
 import java.awt.*;
 
-public interface AwtRenderObject extends UniformRenderObject {
-    void paint(AwtEditor e, Graphics2D g);
+public abstract class AwtRenderObject implements UniformRenderObject {
+    @Override
+    public View getView() {
+        return AwtEditor.INSTANCE.getView();
+    }
+
+    public abstract void paint(AwtEditor e, Graphics2D g);
 
     @Value
-    class Adapter implements RenderObjectAdapter {
+    public static class Adapter implements RenderObjectAdapter {
         @Override
         public SolderPointCircle createSolderPointCircle(ConnectionPoint connectionPoint) {
             return new SolderPointCircle(connectionPoint);

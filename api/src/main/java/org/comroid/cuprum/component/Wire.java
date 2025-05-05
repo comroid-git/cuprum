@@ -1,20 +1,22 @@
 package org.comroid.cuprum.component;
 
-import org.comroid.annotations.Default;
 import org.comroid.api.data.Vector;
-import org.comroid.cuprum.physics.Material;
-import org.jetbrains.annotations.Nullable;
+import org.comroid.cuprum.component.model.Component;
+import org.comroid.cuprum.component.model.Conductive;
 
-public interface Wire extends Component {
-    Vector.N2 getPositionA();
+public interface Wire extends Component, Conductive {
+    /**
+     * @return start position of the wire
+     */
+    default Vector.N2 getPositionA() {
+        return getTransform().getPosition();
+    }
 
-    Vector.N2 getPositionB();
-
-    @Default("1")
-    double getLength();
-
-    @Default("1.5")
-    double getCrossSection();
-
-    @Nullable Material getMaterial();
+    /**
+     * @return end position of the wire
+     */
+    default Vector.N2 getPositionB() {
+        var transform = getTransform();
+        return transform.getPosition().addi(transform.getScale()).as2();
+    }
 }

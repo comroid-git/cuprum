@@ -1,24 +1,31 @@
 package org.comroid.cuprum.editor.render;
 
+import lombok.EqualsAndHashCode;
 import lombok.Value;
+import org.comroid.api.data.Vector;
 import org.comroid.cuprum.component.Wire;
 import org.comroid.cuprum.editor.AwtEditor;
 
 import java.awt.*;
 
 @Value
-public class WireLine implements AwtRenderObject {
-    Wire wire;
+@EqualsAndHashCode(callSuper = true)
+public class WireLine extends AwtRenderObject {
+    Wire component;
+
+    @Override
+    public boolean outOfView() {
+        var view = getView();
+        return view.outOfView(component.getPositionA()) && view.outOfView(component.getPositionB());
+    }
 
     @Override
     public void paint(AwtEditor e, Graphics2D g) {
-        var view = e.getView();
-        if (view.outOfView(wire.getPositionA()) || view.outOfView(wire.getPositionB())) return;
-        var posA = view.transformToView(wire.getPositionA());
-        var posB = view.transformToView(wire.getPositionB());
+        if (outOfView()) return;
 
-        g.setStroke(new BasicStroke(1.5f));
-        g.setColor(Color.BLUE);
+        Vector.N2 posA = component.getPositionA(), posB = component.getPositionB();
+        g.setStroke(new BasicStroke((float) component.getCrossSection()));
+        g.setColor(component.getMaterial().color);
         g.drawLine((int) posA.getX(), (int) posA.getY(), (int) posB.getX(), (int) posB.getY());
     }
 }

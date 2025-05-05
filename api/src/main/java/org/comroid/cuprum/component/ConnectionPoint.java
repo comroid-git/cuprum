@@ -1,7 +1,6 @@
 package org.comroid.cuprum.component;
 
-import org.comroid.api.data.Vector;
+import org.comroid.cuprum.component.model.Component;
 
 public interface ConnectionPoint extends Component {
-    Vector.N2 getPosition();
 }
