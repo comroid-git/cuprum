@@ -6,6 +6,7 @@ import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.comroid.api.data.Vector;
 import org.comroid.cuprum.editor.View;
+import org.comroid.cuprum.editor.model.ViewContainer;
 
 @Value
 @NonFinal
@@ -51,7 +52,7 @@ public abstract class Transform {
 
     @Value
     @EqualsAndHashCode(callSuper = true)
-    public class CanvasToViewAdapter extends Transform {
+    public class CanvasToViewAdapter extends Transform implements ViewContainer {
         View view;
 
         @Override
