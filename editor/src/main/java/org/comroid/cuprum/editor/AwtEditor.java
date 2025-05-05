@@ -4,6 +4,7 @@ import lombok.Value;
 import org.comroid.api.data.Vector;
 import org.comroid.api.func.util.Stopwatch;
 import org.comroid.cuprum.editor.render.AwtRenderObject;
+import org.comroid.cuprum.editor.render.RenderObjectAdapter;
 
 import java.awt.*;
 import java.awt.event.ComponentAdapter;

@@ -1,6 +1,7 @@
-package org.comroid.cuprum.editor;
+package org.comroid.cuprum.editor.render;
 
 import org.comroid.cuprum.component.model.Component;
+import org.comroid.cuprum.editor.View;
 import org.comroid.cuprum.spatial.Transform;
 
 public interface UniformRenderObject extends Component.Holder {
