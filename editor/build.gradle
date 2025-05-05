@@ -1,0 +1,26 @@
+apply plugin: 'application'
+
+group = 'org.comroid'
+version = '1.0-SNAPSHOT'
+mainClassName = 'org.comroid.cuprum.awt.Program'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':engine')
+
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+
+    // lombok
+    implementation 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:+'
+    testImplementation 'org.projectlombok:lombok:1.18.30'
+    testAnnotationProcessor 'org.projectlombok:lombok:+'
+}
+
+test {
+    useJUnitPlatform()
+}
