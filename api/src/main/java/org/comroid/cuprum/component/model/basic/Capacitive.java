@@ -1,4 +1,4 @@
-package org.comroid.cuprum.component.model;
+package org.comroid.cuprum.component.model.basic;
 
 import org.comroid.annotations.Default;
 

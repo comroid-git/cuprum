@@ -2,7 +2,7 @@ package org.comroid.cuprum.component;
 
 import org.comroid.api.data.Vector;
 import org.comroid.cuprum.component.model.Component;
-import org.comroid.cuprum.component.model.Conductive;
+import org.comroid.cuprum.component.model.basic.Conductive;
 
 public interface Wire extends Component, Conductive {
     /**
