@@ -1,0 +1,2 @@
+DC(12V, 1A): GND, VCC;
+VCC -> Contactor(null, NO, 16A) -> Lamp(DC, 50W) -> GND;

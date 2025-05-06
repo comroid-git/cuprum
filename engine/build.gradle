@@ -1,7 +1,12 @@
 apply plugin: 'java-library'
+apply plugin: 'antlr'
 
 group = 'org.comroid'
 version = '1.0-SNAPSHOT'
+
+generateGrammarSource {
+    arguments += ['-visitor', '-package', 'org.comroid.cuprum.grammar']
+}
 
 repositories {
     mavenCentral()
@@ -9,6 +14,8 @@ repositories {
 
 dependencies {
     api project(':api')
+
+    antlr "org.antlr:antlr4:4.13.2"
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'

@@ -1,0 +1,4 @@
+DC(12V, 1A): GND, VCC;
+ContactorCoil(switcher, DC, 1W);
+VCC -> Contactor(switcher, NO, 10A) -> Lamp(50W) named Schließer -> GND;
+VCC -> Contactor(switcher, NC, 10A) -> Lamp(50W) named Öffner -> GND;
