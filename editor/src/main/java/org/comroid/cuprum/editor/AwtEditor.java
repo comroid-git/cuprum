@@ -2,21 +2,30 @@ package org.comroid.cuprum.editor;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-import lombok.experimental.NonFinal;
 import org.comroid.api.data.Vector;
 import org.comroid.api.func.util.Stopwatch;
+import org.comroid.api.func.util.Streams;
+import org.comroid.cuprum.component.model.SimComponent;
 import org.comroid.cuprum.editor.component.ToolBar;
+import org.comroid.cuprum.editor.model.EditorMode;
+import org.comroid.cuprum.editor.model.EditorUser;
 import org.comroid.cuprum.editor.render.AwtRenderObject;
 import org.comroid.cuprum.editor.render.RenderObjectAdapter;
-import org.comroid.cuprum.editor.state.EditorMode;
+import org.comroid.cuprum.editor.render.UniformRenderObject;
 
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
@@ -27,16 +36,18 @@ public class AwtEditor extends Frame implements Editor {
         INSTANCE = new AwtEditor();
     }
 
-    Set<AwtRenderObject> renderObjects = new HashSet<>();
-    RenderObjectAdapter  renderObjectAdapter;
-    View                 view;
-    Canvas               canvas;
-    ToolBar              toolbar;
-    @NonFinal EditorMode mode = EditorMode.INTERACT;
+    Set<SimComponent>                  simComponents = new HashSet<>();
+    Map<SimComponent, AwtRenderObject> renderObjects = new ConcurrentHashMap<>();
+    EditorUser                         user;
+    RenderObjectAdapter                renderObjectAdapter;
+    View                               view;
+    Canvas                             canvas;
+    ToolBar                            toolbar;
 
     public AwtEditor() {
         var size = new Vector.N2(800, 600);
 
+        this.user                = new EditorUser(this);
         this.renderObjectAdapter = new AwtRenderObject.Adapter();
         this.view                = new View(size);
 
@@ -59,31 +70,32 @@ public class AwtEditor extends Frame implements Editor {
         toolbar.getModeMenu().new Listener() {
             @Override
             public void modeInteract() {
-                mode = EditorMode.INTERACT;
-                updateModeMenu();
+                user.setMode(EditorMode.INTERACT);
+                refreshEditorModeVisual();
             }
 
             @Override
             public void modeRemove() {
-                mode = EditorMode.REMOVE;
-                updateModeMenu();
+                user.setMode(EditorMode.REMOVE);
+                refreshEditorModeVisual();
             }
         };
-        toolbar.getModeMenu().getInsertToolMenu().new Listener() {
+        toolbar.getModeMenu().getInsertToolMenu()
+                .new Listener() {
             @Override
             public void toolWire() {
-                mode = EditorMode.TOOL_WIRE;
-                updateModeMenu();
+                user.setMode(EditorMode.TOOL_WIRE);
+                refreshEditorModeVisual();
             }
 
             @Override
             public void toolSolder() {
-                mode = EditorMode.TOOL_SOLDER;
-                updateModeMenu();
+                user.setMode(EditorMode.TOOL_SOLDER);
+                refreshEditorModeVisual();
             }
         };
         setMenuBar(toolbar);
-        updateModeMenu();
+        refreshEditorModeVisual();
 
         canvas = new Canvas() {
             private final Stopwatch stopwatch = new Stopwatch(AwtEditor.this);
@@ -98,12 +110,39 @@ public class AwtEditor extends Frame implements Editor {
 
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.drawString(String.format("FPS: %.0f (%.2fms)", 1_000_000_000f / frameTimeNanos, frameTimeNanos / 1_000_000f), 10, 20);
-                for (var renderObject : renderObjects)
-                    renderObject.paint(AwtEditor.this, g2);
+                Stream.concat(renderObjects.values().stream(), getSecondaryRenderObjects())
+                        .flatMap(Streams.cast(AwtRenderObject.class))
+                        .forEach(obj -> obj.paint(AwtEditor.this, g2));
 
                 frameTimeNanos = stopwatch.stop().toNanos();
             }
         };
+        canvas.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                var pos = new Vector.N2(e.getX(), e.getY());
+                pos = view.transformToView(pos);
+                user.getCursor().setPosition(pos);
+                System.out.println("pos = " + pos);
+            }
+        });
+        canvas.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                var pos = new Vector.N2(e.getX(), e.getY());
+                pos = view.transformToView(pos);
+                switch (e.getButton()) {
+                    case MouseEvent.BUTTON1:
+                        user.triggerClickPrimary(pos);
+                        break;
+                    case MouseEvent.BUTTON2:
+                        user.triggerClickSecondary(pos);
+                        break;
+                    case MouseEvent.BUTTON3:
+                        break;
+                }
+            }
+        });
         canvas.setBackground(Color.LIGHT_GRAY);
 
         add(canvas, BorderLayout.CENTER);
@@ -125,12 +164,38 @@ public class AwtEditor extends Frame implements Editor {
         setVisible(true);
     }
 
-    private void updateModeMenu() {
-        var m = toolbar.getModeMenu();
-        m.getModeInteract().setEnabled(mode != EditorMode.INTERACT);
-        m.getModeRemove().setEnabled(mode != EditorMode.REMOVE);
+    @Override
+    public Stream<? extends SimComponent> getSimComponents() {
+        return simComponents.stream();
+    }
 
-        var itm = m.getInsertToolMenu();
+    public void add(SimComponent component) {
+        final var adapter = getRenderObjectAdapter();
+        if (simComponents.add(component)) {
+            var renderObject = (AwtRenderObject) component.createRenderObject(adapter);
+            if (renderObject != null) renderObjects.put(component, renderObject);
+        }
+    }
+
+    @Override
+    public boolean remove(SimComponent component) {
+        return simComponents.remove(component) & renderObjects.remove(component) != null;
+    }
+
+    private Stream<UniformRenderObject> getSecondaryRenderObjects() {
+        return user.getRenderObjects().stream();
+    }
+
+    private void refreshEditorModeVisual() {
+        user.refreshVisual();
+
+        // apply user mode to toolbar
+        var mode = user.getMode();
+        var menu = toolbar.getModeMenu();
+        menu.getModeInteract().setEnabled(mode != EditorMode.INTERACT);
+        menu.getModeRemove().setEnabled(mode != EditorMode.REMOVE);
+
+        var itm = menu.getInsertToolMenu();
         itm.getToolWire().setEnabled(mode != EditorMode.TOOL_WIRE);
         itm.getToolSolder().setEnabled(mode != EditorMode.TOOL_SOLDER);
     }

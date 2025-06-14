@@ -1,4 +1,4 @@
-package org.comroid.cuprum.editor.state;
+package org.comroid.cuprum.editor.model;
 
 import org.comroid.api.attr.Named;
 

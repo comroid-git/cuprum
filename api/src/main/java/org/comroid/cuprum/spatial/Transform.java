@@ -29,6 +29,10 @@ public class Transform implements ITransform {
     public interface Holder extends ITransform {
         ITransform getTransform();
 
+        default void setTransform(ITransform transform) {
+            throw new UnsupportedOperationException("Cannot set Transform on " + this);
+        }
+
         @Override
         default Vector.N2 getPosition() {
             return getTransform().getPosition();
