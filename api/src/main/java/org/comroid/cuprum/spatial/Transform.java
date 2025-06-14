@@ -1,17 +1,21 @@
 package org.comroid.cuprum.spatial;
 
-import lombok.EqualsAndHashCode;
 import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.comroid.api.data.Vector;
 import org.comroid.cuprum.editor.View;
 import org.comroid.cuprum.editor.model.ViewContainer;
+import org.comroid.cuprum.model.ITransform;
 
 @Value
 @NonFinal
-public abstract class Transform {
+public class Transform implements ITransform {
     @NonFinal @Setter Vector.N2 position, scale;
+
+    public Transform() {
+        this(Vector.N2.Zero);
+    }
 
     public Transform(Vector.N2 position) {
         this(position, Vector.N2.One);
@@ -22,47 +26,49 @@ public abstract class Transform {
         this.scale    = scale;
     }
 
-    public interface Holder {
-        Transform getTransform();
+    public interface Holder extends ITransform {
+        ITransform getTransform();
 
+        @Override
         default Vector.N2 getPosition() {
             return getTransform().getPosition();
         }
 
+        @Override
         default Vector.N2 getScale() {
             return getTransform().getScale();
         }
     }
 
     @Value
-    @EqualsAndHashCode(callSuper = true)
-    public class Relative extends Transform {
+    public static class Relative implements ITransform, Holder {
+        ITransform transform;
         @NonFinal @Setter Vector.N2 positionOffset, scaleOffset;
 
         @Override
         public Vector.N2 getPosition() {
-            return Transform.this.getPosition().addi(positionOffset).as2();
+            return transform.getPosition().addi(positionOffset).as2();
         }
 
         @Override
         public Vector.N2 getScale() {
-            return Transform.this.getScale().muli(scaleOffset).as2();
+            return transform.getScale().muli(scaleOffset).as2();
         }
     }
 
     @Value
-    @EqualsAndHashCode(callSuper = true)
-    public class CanvasToViewAdapter extends Transform implements ViewContainer {
-        View view;
+    public static class CanvasToViewAdapter implements ITransform, Holder, ViewContainer {
+        ITransform transform;
+        View       view;
 
         @Override
         public Vector.N2 getPosition() {
-            return view.transformToView(Transform.this.getPosition());
+            return view.transformToView(transform.getPosition());
         }
 
         @Override
         public Vector.N2 getScale() {
-            return Transform.this.getScale();
+            return transform.getScale();
         }
     }
 }
