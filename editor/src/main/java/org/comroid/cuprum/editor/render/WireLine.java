@@ -27,10 +27,14 @@ public class WireLine extends AwtRenderObject {
         var last   = iter.next();
         var offset = getTransform().getPosition();
         while (iter.hasNext()) {
-            Vector posA = last.position().addi(offset), posB = iter.next().position().addi(offset);
+            var    it   = iter.next();
+            Vector posA = last.position().addi(offset), posB = it.position().addi(offset);
+
             g.setStroke(new BasicStroke((float) component.getCrossSection()));
             g.setColor(component.getMaterial().color);
             g.drawLine((int) posA.getX(), (int) posA.getY(), (int) posB.getX(), (int) posB.getY());
+
+            last = it;
         }
     }
 }
