@@ -25,9 +25,10 @@ public class WireLine extends AwtRenderObject {
 
         var iter = component.getSegments().iterator();
         if (!iter.hasNext()) throw new IllegalStateException("Wire has no points");
-        var last = iter.next();
+        var last   = iter.next();
+        var offset = getTransform().getPosition();
         while (iter.hasNext()) {
-            Vector.N2 posA = last.position(), posB = iter.next().position();
+            Vector posA = last.position().addi(offset), posB = iter.next().position().addi(offset);
             g.setStroke(new BasicStroke((float) component.getCrossSection()));
             g.setColor(component.getMaterial().color);
             g.drawLine((int) posA.getX(), (int) posA.getY(), (int) posB.getX(), (int) posB.getY());
