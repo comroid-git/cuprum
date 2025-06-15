@@ -5,6 +5,8 @@ import org.comroid.cuprum.component.ConnectionPoint;
 import org.comroid.cuprum.component.Wire;
 import org.comroid.cuprum.editor.AwtEditor;
 import org.comroid.cuprum.editor.View;
+import org.comroid.cuprum.editor.render.impl.SolderPointCircle;
+import org.comroid.cuprum.editor.render.impl.WireLine;
 
 import java.awt.*;
 
@@ -19,7 +21,7 @@ public abstract class AwtRenderObject implements UniformRenderObject {
     @Value
     public static class Adapter implements RenderObjectAdapter {
         @Override
-        public SolderPointCircle createSolderPointCircle(ConnectionPoint connectionPoint) {
+        public SolderPointCircle createSolderPoint(ConnectionPoint connectionPoint) {
             return new SolderPointCircle(connectionPoint);
         }
 

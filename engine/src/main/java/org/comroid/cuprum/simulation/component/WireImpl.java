@@ -1,6 +1,5 @@
 package org.comroid.cuprum.simulation.component;
 
-import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;

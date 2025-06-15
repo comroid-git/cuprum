@@ -9,6 +9,7 @@ import org.comroid.cuprum.editor.render.UniformRenderObject;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 public interface Wire extends SimComponent, Conductive {
     List<Segment> getSegments();
@@ -32,6 +33,11 @@ public interface Wire extends SimComponent, Conductive {
     @Override
     default UniformRenderObject createRenderObject(RenderObjectAdapter adapter) {
         return adapter.createWireLine(this);
+    }
+
+    @Override
+    default Stream<Vector.N2> getSnappingPoints() {
+        return getSegments().stream().map(Segment::position);
     }
 
     record Segment(Vector.N2 position, @With @Nullable Double length) {

@@ -2,6 +2,7 @@ package org.comroid.cuprum.editor;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import lombok.experimental.NonFinal;
 import org.comroid.api.data.Vector;
 import org.comroid.api.func.util.Stopwatch;
 import org.comroid.api.func.util.Streams;
@@ -12,6 +13,8 @@ import org.comroid.cuprum.editor.model.EditorUser;
 import org.comroid.cuprum.editor.render.AwtRenderObject;
 import org.comroid.cuprum.editor.render.RenderObjectAdapter;
 import org.comroid.cuprum.editor.render.UniformRenderObject;
+import org.comroid.cuprum.editor.render.impl.SnappingMarker;
+import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
@@ -22,10 +25,13 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 @Value
@@ -44,6 +50,8 @@ public class AwtEditor extends Frame implements Editor {
     View                               view;
     Canvas                             canvas;
     ToolBar                            toolbar;
+    Executor                           renderer      = Executors.newSingleThreadExecutor();
+    @NonFinal @Nullable SnappingMarker snappingPoint;
 
     public AwtEditor() {
         var size = new Vector.N2(800, 600);
@@ -114,7 +122,7 @@ public class AwtEditor extends Frame implements Editor {
                 g2.drawString(String.format("Position: %.0f %.0f", user.getCursor().getPosition().getX(), user.getCursor().getPosition().getY()), 10, 30);
                 g2.drawString(String.format("Object: %s", user.getComponent()), 10, 40);
 
-                Stream.concat(renderObjects.values().stream(), getSecondaryRenderObjects())
+                Stream.concat(getPrimaryRenderObjects(), getSecondaryRenderObjects())
                         .flatMap(Streams.cast(AwtRenderObject.class))
                         .forEach(obj -> obj.paint(AwtEditor.this, g2));
 
@@ -124,15 +132,33 @@ public class AwtEditor extends Frame implements Editor {
         canvas.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
-                var pos = new Vector.N2(e.getX(), e.getY());
-                pos = view.transformCanvasToEditor(pos);
+                var pos = view.transformCanvasToEditor(new Vector.N2(e.getX(), e.getY()));
                 user.getCursor().setPosition(pos);
+
+                var hadCandidate = snappingPoint != null;
+                var hasCandidate = new boolean[]{ false };
+                snappingPoint = simComponents.stream()
+                        .flatMap(comp -> comp.getSnappingPoints().map(snap -> new SnappingPointCandidate(comp, snap)))
+                        .filter(candidate -> Vector.dist(candidate.position, pos) < 10)
+                        .min(Comparator.comparingDouble(candidate -> Vector.dist(candidate.position, pos)))
+                        .map(candidate -> {
+                            hasCandidate[0] = true;
+                            return candidate.renderObject();
+                        })
+                        .orElse(null);
+                if (hadCandidate != hasCandidate[0] || hasCandidate[0]) refreshVisual();
+            }
+
+            private record SnappingPointCandidate(SimComponent component, Vector.N2 position) {
+                private SnappingMarker renderObject() {
+                    return new SnappingMarker(component, position);
+                }
             }
         });
         canvas.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                var pos = new Vector.N2(e.getX(), e.getY());
+                var pos = snappingPoint == null ? new Vector.N2(e.getX(), e.getY()) : snappingPoint.getPosition();
                 pos = view.transformCanvasToEditor(pos);
 
                 switch (e.getButton()) {
@@ -147,7 +173,7 @@ public class AwtEditor extends Frame implements Editor {
                 }
 
                 refreshEditorModeVisual();
-                canvas.repaint();
+                refreshVisual();
             }
         });
         canvas.setBackground(Color.LIGHT_GRAY);
@@ -158,7 +184,7 @@ public class AwtEditor extends Frame implements Editor {
             public void componentResized(ComponentEvent e) {
                 var size = getSize();
                 view.setSize(new Vector.N2(size.width, size.height));
-                canvas.repaint();
+                refreshVisual();
             }
         });
         addWindowListener(new WindowAdapter() {
@@ -196,7 +222,11 @@ public class AwtEditor extends Frame implements Editor {
 
     @Override
     public void refreshVisual() {
-        canvas.repaint();
+        renderer.execute(canvas::repaint);
+    }
+
+    private Stream<UniformRenderObject> getPrimaryRenderObjects() {
+        return Stream.concat(Stream.ofNullable(snappingPoint), renderObjects.values().stream());
     }
 
     private Stream<UniformRenderObject> getSecondaryRenderObjects() {
