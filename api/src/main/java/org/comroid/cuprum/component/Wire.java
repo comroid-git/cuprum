@@ -5,34 +5,37 @@ import org.comroid.cuprum.component.model.SimComponent;
 import org.comroid.cuprum.component.model.basic.Conductive;
 import org.comroid.cuprum.editor.render.RenderObjectAdapter;
 import org.comroid.cuprum.editor.render.UniformRenderObject;
+import org.jetbrains.annotations.Nullable;
 
-import static java.lang.Math.*;
+import java.util.List;
 
 public interface Wire extends SimComponent, Conductive {
-    /**
-     * @return start position of the wire
-     */
-    default Vector.N2 getPositionA() {
-        return getTransform().getPosition();
-    }
-
-    /**
-     * @return end position of the wire
-     */
-    default Vector.N2 getPositionB() {
-        var transform = getTransform();
-        return transform.getPosition().addi(transform.getScale()).as2();
-    }
+    List<Segment> getSegments();
 
     @Override
     default double getLength() {
-        Vector.N2 pa = getPositionA(), pb = getPositionB();
-        Vector    a  = Vector.min(pa, pb), b = Vector.max(pa, pb);
-        return sqrt(pow(b.getX() - a.getX(), 2) + pow(b.getY() - a.getY(), 2) + pow(b.getZ() - a.getZ(), 2));
+        var iter = getSegments().iterator();
+        if (!iter.hasNext()) throw new IllegalStateException("Wire has no points");
+        var last = iter.next();
+        var dist = 0.0;
+        while (iter.hasNext()) {
+            var it = iter.next();
+            dist += it.length != null ? it.length : Vector.dist(last.position, it.position);
+            last = it;
+        }
+        return dist;
     }
+
+    boolean addSegment(Segment segment);
 
     @Override
     default UniformRenderObject createRenderObject(RenderObjectAdapter adapter) {
         return adapter.createWireLine(this);
+    }
+
+    record Segment(Vector.N2 position, @Nullable Double length) {
+        public Segment(Vector.N2 position) {
+            this(position, null);
+        }
     }
 }

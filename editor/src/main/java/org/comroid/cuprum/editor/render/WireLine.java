@@ -16,16 +16,21 @@ public class WireLine extends AwtRenderObject {
     @Override
     public boolean outOfView() {
         var view = getView();
-        return view.outOfView(component.getPositionA()) && view.outOfView(component.getPositionB());
+        return component.getSegments().stream().map(Wire.Segment::position).allMatch(view::outOfView);
     }
 
     @Override
     public void paint(AwtEditor e, Graphics2D g) {
         if (outOfView()) return;
 
-        Vector.N2 posA = component.getPositionA(), posB = component.getPositionB();
-        g.setStroke(new BasicStroke((float) component.getCrossSection()));
-        g.setColor(component.getMaterial().color);
-        g.drawLine((int) posA.getX(), (int) posA.getY(), (int) posB.getX(), (int) posB.getY());
+        var iter = component.getSegments().iterator();
+        if (!iter.hasNext()) throw new IllegalStateException("Wire has no points");
+        var last = iter.next();
+        while (iter.hasNext()) {
+            Vector.N2 posA = last.position(), posB = iter.next().position();
+            g.setStroke(new BasicStroke((float) component.getCrossSection()));
+            g.setColor(component.getMaterial().color);
+            g.drawLine((int) posA.getX(), (int) posA.getY(), (int) posB.getX(), (int) posB.getY());
+        }
     }
 }

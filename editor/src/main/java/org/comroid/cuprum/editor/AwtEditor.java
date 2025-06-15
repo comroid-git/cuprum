@@ -21,6 +21,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -166,6 +167,10 @@ public class AwtEditor extends Frame implements Editor {
         });
 
         setVisible(true);
+    }
+
+    public Map<SimComponent, AwtRenderObject> getRenderObjects() {
+        return Collections.unmodifiableMap(renderObjects);
     }
 
     @Override
