@@ -71,11 +71,11 @@ public class EditorUser {
         switch (mode) {
             case INTERACT:
                 // todo Interact
-                return;
+                break;
 
             case TOOL_WIRE:
                 // buffer position
-                if (component instanceof Wire wire && wire.addSegment(new Wire.Segment(position))) return;
+                if (component instanceof Wire wire && wire.addSegment(new Wire.Segment(position))) break;
                 throw new IllegalStateException("Failed to trigger click primary on wire");
 
             case TOOL_SOLDER:
@@ -84,7 +84,7 @@ public class EditorUser {
             case TOOL_OBJECT:
                 if (component == null) {
                     setMode(EditorMode.INTERACT);
-                    return;
+                    break;
                 }
 
                 component.setTransform(new Transform(position));
@@ -94,8 +94,12 @@ public class EditorUser {
                 break;
 
             case REMOVE:
-                // todo Remove
-                return;
+                var snap = editor.getSnappingPoint();
+                if (snap == null) return;
+                var comp = snap.getComponent();
+                editor.remove(comp);
+
+                break;
         }
     }
 
