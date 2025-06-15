@@ -1,10 +1,14 @@
 package org.comroid.cuprum.editor.model;
 
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.extern.java.Log;
 import org.comroid.api.data.Vector;
 import org.comroid.cuprum.EngineDelegate;
+import org.comroid.cuprum.component.Wire;
 import org.comroid.cuprum.component.model.SimComponent;
 import org.comroid.cuprum.editor.Editor;
 import org.comroid.cuprum.editor.render.UniformRenderObject;
@@ -13,41 +17,44 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
+import java.util.function.Supplier;
 
 @Log
-@Data
-@EqualsAndHashCode(exclude = "editor")
+@Getter
+@RequiredArgsConstructor
+@ToString(exclude = { "editor" })
+@EqualsAndHashCode(exclude = { "editor" })
 public class EditorUser {
-    private final     Editor                   editor;
-    private final     Set<UniformRenderObject> renderObjects = new HashSet<>();
-    private final     Transform                cursor        = new Transform();
-    private           EditorMode               mode          = EditorMode.INTERACT;
-    private @Nullable SimComponent             component;
-    private @Nullable Vector.N2                bufferPosition;
+    private final             Editor                   editor;
+    private final             Set<UniformRenderObject> renderObjects = new HashSet<>();
+    private final             Transform                cursor        = new Transform();
+    private                   EditorMode               mode          = EditorMode.INTERACT;
+    private @Setter @Nullable Supplier<SimComponent>   componentCtor;
+    private @Nullable         SimComponent             component;
 
-    public void setMode(EditorMode mode) {
-        setComponent(switch (this.mode = mode) {
-            case TOOL_WIRE -> EngineDelegate.INSTANCE.createWire();
-            case TOOL_SOLDER -> EngineDelegate.INSTANCE.createConnectionPoint();
-            case TOOL_OBJECT -> component;
+    public @Nullable SimComponent getComponent() {
+        return component == null && componentCtor != null ? createComponent() : component;
+    }
+
+    public synchronized void setMode(EditorMode mode) {
+        component     = null;
+        componentCtor = switch (this.mode = mode) {
+            case TOOL_WIRE -> EngineDelegate.INSTANCE::createWire;
+            case TOOL_SOLDER -> EngineDelegate.INSTANCE::createConnectionPoint;
+            case TOOL_OBJECT -> componentCtor;
             default -> null;
-        });
+        };
     }
 
-    public void setComponent(@Nullable SimComponent component) {
-        this.component = component;
-
-        if (component != null && !cursor.equals(component.getTransform())) try {
-            component.setTransform(cursor);
-        } catch (UnsupportedOperationException e) {
-            log.log(Level.FINE, "Wrongly tried to attach object to cursor: " + component, e);
+    public synchronized @Nullable SimComponent createComponent() {
+        try {
+            return componentCtor != null ? component = componentCtor.get() : null;
+        } finally {
+            if (component != null && !(component instanceof Wire)) component.setTransform(cursor);
         }
-
-        refreshVisual();
     }
 
-    public void refreshVisual() {
+    public synchronized void refreshVisual() {
         renderObjects.clear();
 
         if (component != null) {
@@ -56,18 +63,22 @@ public class EditorUser {
         }
     }
 
-    public void triggerClickPrimary(Vector.N2 position) {
+    public synchronized void triggerClickPrimary(Vector.N2 position, boolean shift) {
+        getComponent();
+
         switch (mode) {
             case INTERACT:
                 // todo Interact
                 return;
+
             case TOOL_WIRE:
                 // buffer position
-                bufferPosition = position;
-                return;
+                if (component instanceof Wire wire && wire.addSegment(new Wire.Segment(position))) return;
+                throw new IllegalStateException("Failed to trigger click primary on wire");
+
             case TOOL_SOLDER, TOOL_OBJECT:
                 if (component == null) {
-                    mode = EditorMode.INTERACT;
+                    setMode(EditorMode.INTERACT);
                     return;
                 }
 
@@ -76,34 +87,34 @@ public class EditorUser {
                 this.component = null;
 
                 break;
+
             case REMOVE:
                 // todo Remove
                 return;
         }
-
-        refreshVisual();
     }
 
-    public void triggerClickSecondary(Vector.N2 position) {
+    public synchronized void triggerClickSecondary(Vector.N2 position, boolean shift) {
+        getComponent();
+
         //noinspection SwitchStatementWithTooFewBranches
         switch (mode) {
             case TOOL_WIRE:
-                if (component == null || bufferPosition == null) {
-                    mode = EditorMode.INTERACT;
+                if (!(component instanceof Wire wire)) {
+                    setMode(EditorMode.INTERACT);
                     return;
                 }
 
                 // place last point and finalize
-                component.setTransform(new Transform(bufferPosition, Vector.rel(bufferPosition, position).as2()));
+                if (shift) wire.addSegment(new Wire.Segment(position));
                 editor.add(component);
-                this.component = null;
+                setMode(EditorMode.INTERACT);
 
                 break;
+
             default:
-                mode = EditorMode.INTERACT;
+                setMode(EditorMode.INTERACT);
                 break;
         }
-
-        refreshVisual();
     }
 }

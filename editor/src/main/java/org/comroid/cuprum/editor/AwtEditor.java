@@ -132,25 +132,21 @@ public class AwtEditor extends Frame implements Editor {
         canvas.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                var userObjWasNonNull = user.getComponent() != null;
-                var pos               = new Vector.N2(e.getX(), e.getY());
+                var pos = new Vector.N2(e.getX(), e.getY());
                 pos = view.transformCanvasToEditor(pos);
 
                 switch (e.getButton()) {
-                    case MouseEvent.BUTTON1:
-                        user.triggerClickPrimary(pos);
+                    case MouseEvent.BUTTON1: // left click
+                        user.triggerClickPrimary(pos, e.isShiftDown());
                         break;
-                    case MouseEvent.BUTTON2:
-                        user.triggerClickSecondary(pos);
+                    case MouseEvent.BUTTON2: // mouse wheel
                         break;
-                    case MouseEvent.BUTTON3:
+                    case MouseEvent.BUTTON3: // right click
+                        user.triggerClickSecondary(pos, e.isShiftDown());
                         break;
                 }
 
-                if (userObjWasNonNull && user.getComponent() == null) {
-                    user.setMode(e.isShiftDown() ? user.getMode() : EditorMode.INTERACT);
-                    refreshEditorModeVisual();
-                }
+                refreshEditorModeVisual();
                 canvas.repaint();
             }
         });

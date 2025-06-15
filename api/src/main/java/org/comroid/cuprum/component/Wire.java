@@ -1,5 +1,6 @@
 package org.comroid.cuprum.component;
 
+import lombok.With;
 import org.comroid.api.data.Vector;
 import org.comroid.cuprum.component.model.SimComponent;
 import org.comroid.cuprum.component.model.basic.Conductive;
@@ -33,7 +34,7 @@ public interface Wire extends SimComponent, Conductive {
         return adapter.createWireLine(this);
     }
 
-    record Segment(Vector.N2 position, @Nullable Double length) {
+    record Segment(Vector.N2 position, @With @Nullable Double length) {
         public Segment(Vector.N2 position) {
             this(position, null);
         }
