@@ -18,15 +18,15 @@ public class View {
     public boolean outOfView(Vector position) {
         position = position.subi(this.position);
         var compare = size.addi(BORDER_PADDING);
-        return position.getX() > -BORDER_PADDING && position.getY() > -BORDER_PADDING && position.getX() <= compare.getX() && position.getY() <= compare.getY();
+        return !(position.getX() > -BORDER_PADDING && position.getY() > -BORDER_PADDING && position.getX() <= compare.getX() && position.getY() <= compare.getY());
     }
 
-    public Vector.N2 transformToView(Vector position) {
-        return position.addi(tl()).as2();
-    }
-
-    public Vector.N2 transformToCanvas(Vector position) {
+    public Vector.N2 transformEditorToCanvas(Vector position) {
         return position.subi(tl()).as2();
+    }
+
+    public Vector.N2 transformCanvasToEditor(Vector position) {
+        return position.addi(tl()).as2();
     }
 
     private Vector tl() {

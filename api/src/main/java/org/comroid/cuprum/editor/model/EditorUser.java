@@ -38,7 +38,7 @@ public class EditorUser {
     public void setComponent(@Nullable SimComponent component) {
         this.component = component;
 
-        if (component != null) try {
+        if (component != null && !cursor.equals(component.getTransform())) try {
             component.setTransform(cursor);
         } catch (UnsupportedOperationException e) {
             log.log(Level.FINE, "Wrongly tried to attach object to cursor: " + component, e);

@@ -109,7 +109,11 @@ public class AwtEditor extends Frame implements Editor {
                 var g2 = (Graphics2D) g;
 
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
                 g2.drawString(String.format("FPS: %.0f (%.2fms)", 1_000_000_000f / frameTimeNanos, frameTimeNanos / 1_000_000f), 10, 20);
+                g2.drawString(String.format("Position: %.0f %.0f", user.getCursor().getPosition().getX(), user.getCursor().getPosition().getY()), 10, 30);
+                g2.drawString(String.format("Object: %s", user.getComponent()), 10, 40);
+
                 Stream.concat(renderObjects.values().stream(), getSecondaryRenderObjects())
                         .flatMap(Streams.cast(AwtRenderObject.class))
                         .forEach(obj -> obj.paint(AwtEditor.this, g2));
@@ -121,16 +125,15 @@ public class AwtEditor extends Frame implements Editor {
             @Override
             public void mouseMoved(MouseEvent e) {
                 var pos = new Vector.N2(e.getX(), e.getY());
-                pos = view.transformToView(pos);
+                pos = view.transformCanvasToEditor(pos);
                 user.getCursor().setPosition(pos);
-                System.out.println("pos = " + pos);
             }
         });
         canvas.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 var pos = new Vector.N2(e.getX(), e.getY());
-                pos = view.transformToView(pos);
+                pos = view.transformCanvasToEditor(pos);
                 switch (e.getButton()) {
                     case MouseEvent.BUTTON1:
                         user.triggerClickPrimary(pos);
@@ -141,6 +144,7 @@ public class AwtEditor extends Frame implements Editor {
                     case MouseEvent.BUTTON3:
                         break;
                 }
+                canvas.repaint();
             }
         });
         canvas.setBackground(Color.LIGHT_GRAY);

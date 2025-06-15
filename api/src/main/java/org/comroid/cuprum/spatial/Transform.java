@@ -67,7 +67,7 @@ public class Transform implements ITransform {
 
         @Override
         public Vector.N2 getPosition() {
-            return view.transformToView(transform.getPosition());
+            return view.transformEditorToCanvas(transform.getPosition());
         }
 
         @Override
