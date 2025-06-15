@@ -96,7 +96,6 @@ public class AwtEditor extends Frame implements Editor {
             }
         };
         setMenuBar(toolbar);
-        refreshEditorModeVisual();
 
         canvas = new Canvas() {
             private final Stopwatch stopwatch = new Stopwatch(AwtEditor.this);
@@ -133,8 +132,10 @@ public class AwtEditor extends Frame implements Editor {
         canvas.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                var pos = new Vector.N2(e.getX(), e.getY());
+                var userObjWasNonNull = user.getComponent() != null;
+                var pos               = new Vector.N2(e.getX(), e.getY());
                 pos = view.transformCanvasToEditor(pos);
+
                 switch (e.getButton()) {
                     case MouseEvent.BUTTON1:
                         user.triggerClickPrimary(pos);
@@ -144,6 +145,11 @@ public class AwtEditor extends Frame implements Editor {
                         break;
                     case MouseEvent.BUTTON3:
                         break;
+                }
+
+                if (userObjWasNonNull && user.getComponent() == null) {
+                    user.setMode(e.isShiftDown() ? user.getMode() : EditorMode.INTERACT);
+                    refreshEditorModeVisual();
                 }
                 canvas.repaint();
             }
@@ -167,6 +173,7 @@ public class AwtEditor extends Frame implements Editor {
         });
 
         setVisible(true);
+        refreshEditorModeVisual();
     }
 
     public Map<SimComponent, AwtRenderObject> getRenderObjects() {
