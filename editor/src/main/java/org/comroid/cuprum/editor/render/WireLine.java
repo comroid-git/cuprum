@@ -15,8 +15,7 @@ public class WireLine extends AwtRenderObject {
 
     @Override
     public boolean outOfView() {
-        var view = getView();
-        return component.getSegments().stream().map(Wire.Segment::position).allMatch(view::outOfView);
+        return component.getSegments().stream().map(Wire.Segment::position).map(getView()::transformEditorToCanvas).allMatch(getView()::outOfView);
     }
 
     @Override
