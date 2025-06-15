@@ -23,4 +23,6 @@ public interface Editor extends ViewContainer {
     }
 
     boolean remove(SimComponent component);
+
+    void refreshVisual();
 }

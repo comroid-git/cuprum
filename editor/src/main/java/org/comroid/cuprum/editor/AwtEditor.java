@@ -194,6 +194,11 @@ public class AwtEditor extends Frame implements Editor {
         return simComponents.remove(component) & renderObjects.remove(component) != null;
     }
 
+    @Override
+    public void refreshVisual() {
+        canvas.repaint();
+    }
+
     private Stream<UniformRenderObject> getSecondaryRenderObjects() {
         return user.getRenderObjects().stream();
     }
