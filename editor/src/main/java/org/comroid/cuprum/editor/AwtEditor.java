@@ -121,6 +121,7 @@ public class AwtEditor extends Frame implements Editor {
                 g2.drawString(String.format("FPS: %.0f (%.2fms)", 1_000_000_000f / frameTimeNanos, frameTimeNanos / 1_000_000f), 10, 20);
                 g2.drawString(String.format("Position: %.0f %.0f", user.getCursor().getPosition().getX(), user.getCursor().getPosition().getY()), 10, 30);
                 g2.drawString(String.format("Object: %s", user.getComponent()), 10, 40);
+                g2.drawString(String.format("Mode: %s", user.getMode()), 10, 50);
 
                 Stream.concat(getPrimaryRenderObjects(), getSecondaryRenderObjects())
                         .flatMap(Streams.cast(AwtRenderObject.class))
