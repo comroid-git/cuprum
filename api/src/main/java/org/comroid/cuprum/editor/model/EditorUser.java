@@ -108,7 +108,7 @@ public class EditorUser {
                 // place last point and finalize
                 if (shift) wire.addSegment(new Wire.Segment(position));
                 editor.add(component);
-                setMode(EditorMode.INTERACT);
+                setMode(shift ? EditorMode.TOOL_WIRE : EditorMode.INTERACT);
 
                 break;
 
