@@ -81,12 +81,14 @@ public class AwtEditor extends Frame implements Editor {
             public void modeInteract() {
                 user.setMode(EditorMode.INTERACT);
                 refreshEditorModeVisual();
+                refreshVisual();
             }
 
             @Override
             public void modeRemove() {
                 user.setMode(EditorMode.REMOVE);
                 refreshEditorModeVisual();
+                refreshVisual();
             }
         };
         toolbar.getModeMenu().getInsertToolMenu()
@@ -95,12 +97,14 @@ public class AwtEditor extends Frame implements Editor {
             public void toolWire() {
                 user.setMode(EditorMode.TOOL_WIRE);
                 refreshEditorModeVisual();
+                refreshVisual();
             }
 
             @Override
             public void toolSolder() {
                 user.setMode(EditorMode.TOOL_SOLDER);
                 refreshEditorModeVisual();
+                refreshVisual();
             }
         };
         setMenuBar(toolbar);
