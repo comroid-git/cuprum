@@ -5,6 +5,7 @@ import lombok.Value;
 import org.comroid.api.data.Vector;
 import org.comroid.cuprum.component.model.SimComponent;
 import org.comroid.cuprum.editor.AwtEditor;
+import org.comroid.cuprum.editor.model.SnappingPoint;
 import org.comroid.cuprum.editor.render.AwtRenderObject;
 import org.comroid.cuprum.model.ITransform;
 import org.comroid.cuprum.spatial.Transform;
@@ -13,7 +14,7 @@ import java.awt.*;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public class SnappingMarker extends AwtRenderObject {
+public class SnappingMarker extends AwtRenderObject implements SnappingPoint {
     public static final int DIAMETER = 11;
     SimComponent component;
     ITransform   transform;

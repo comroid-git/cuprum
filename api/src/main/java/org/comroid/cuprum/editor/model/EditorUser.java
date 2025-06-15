@@ -8,6 +8,7 @@ import lombok.ToString;
 import lombok.extern.java.Log;
 import org.comroid.api.data.Vector;
 import org.comroid.cuprum.EngineDelegate;
+import org.comroid.cuprum.component.ConnectionPoint;
 import org.comroid.cuprum.component.Wire;
 import org.comroid.cuprum.component.model.SimComponent;
 import org.comroid.cuprum.editor.Editor;
@@ -16,6 +17,7 @@ import org.comroid.cuprum.spatial.Transform;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -76,7 +78,10 @@ public class EditorUser {
                 if (component instanceof Wire wire && wire.addSegment(new Wire.Segment(position))) return;
                 throw new IllegalStateException("Failed to trigger click primary on wire");
 
-            case TOOL_SOLDER, TOOL_OBJECT:
+            case TOOL_SOLDER:
+                // do not place solder when already snapped on one
+                if (Optional.ofNullable(editor.getSnappingPoint()).map(SimComponent.Holder::getComponent).orElse(null) instanceof ConnectionPoint) return;
+            case TOOL_OBJECT:
                 if (component == null) {
                     setMode(EditorMode.INTERACT);
                     return;
