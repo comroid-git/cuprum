@@ -140,7 +140,9 @@ public class AwtEditor extends Frame implements Editor {
                 snappingPoint = simComponents.stream()
                         .flatMap(comp -> comp.getSnappingPoints().map(snap -> new SnappingPointCandidate(comp, snap)))
                         .filter(candidate -> Vector.dist(candidate.position, pos) < (double) SnappingMarker.DIAMETER / 2)
-                        .min(Comparator.comparingDouble(candidate -> Vector.dist(candidate.position, pos)))
+                        .min(Comparator.<SnappingPointCandidate>comparingInt(snap -> snap.component.priorityLayer())
+                                .reversed()
+                                .thenComparingDouble(candidate -> Vector.dist(candidate.position, pos)))
                         .map(candidate -> {
                             hasCandidate[0] = true;
                             return candidate.renderObject();

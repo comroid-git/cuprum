@@ -14,6 +14,11 @@ public interface ConnectionPoint extends SimComponent {
     }
 
     @Override
+    default int priorityLayer() {
+        return 100;
+    }
+
+    @Override
     default Stream<Vector.N2> getSnappingPoints() {
         return Stream.of(getPosition());
     }

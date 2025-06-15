@@ -10,11 +10,15 @@ import org.jetbrains.annotations.Nullable;
 import java.util.stream.Stream;
 
 public interface SimComponent extends Transform.Holder {
+    Stream<Vector.N2> getSnappingPoints();
+
     default @Nullable UniformRenderObject createRenderObject(RenderObjectAdapter adapter) {
         return null;
     }
 
-    Stream<Vector.N2> getSnappingPoints();
+    default int priorityLayer() {
+        return 0;
+    }
 
     interface Holder extends Transform.Holder {
         SimComponent getComponent();

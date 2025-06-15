@@ -28,7 +28,10 @@ public interface Wire extends SimComponent, Conductive {
         return dist;
     }
 
-    boolean addSegment(Segment segment);
+    @Override
+    default Stream<Vector.N2> getSnappingPoints() {
+        return getSegments().stream().map(Segment::position);
+    }
 
     @Override
     default UniformRenderObject createRenderObject(RenderObjectAdapter adapter) {
@@ -36,9 +39,11 @@ public interface Wire extends SimComponent, Conductive {
     }
 
     @Override
-    default Stream<Vector.N2> getSnappingPoints() {
-        return getSegments().stream().map(Segment::position);
+    default int priorityLayer() {
+        return -100;
     }
+
+    boolean addSegment(Segment segment);
 
     record Segment(Vector.N2 position, @With @Nullable Double length) {
         public Segment(Vector.N2 position) {
