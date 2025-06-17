@@ -6,14 +6,20 @@ import lombok.experimental.NonFinal;
 import org.comroid.api.data.Vector;
 import org.comroid.api.func.util.Stopwatch;
 import org.comroid.api.func.util.Streams;
-import org.comroid.cuprum.component.model.SimComponent;
+import org.comroid.cuprum.component.model.abstr.CuprumComponent;
+import org.comroid.cuprum.component.model.abstr.EditorComponent;
+import org.comroid.cuprum.component.model.abstr.SimulationComponent;
+import org.comroid.cuprum.component.model.abstr.WireMeshComponent;
 import org.comroid.cuprum.editor.component.ToolBar;
 import org.comroid.cuprum.editor.model.EditorMode;
 import org.comroid.cuprum.editor.model.EditorUser;
+import org.comroid.cuprum.editor.model.SnappingPoint;
+import org.comroid.cuprum.editor.model.SnappingPointCandidate;
 import org.comroid.cuprum.editor.render.AwtRenderObject;
 import org.comroid.cuprum.editor.render.RenderObjectAdapter;
 import org.comroid.cuprum.editor.render.UniformRenderObject;
 import org.comroid.cuprum.editor.render.impl.SnappingMarker;
+import org.comroid.cuprum.simulation.WireMesh;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -43,15 +49,16 @@ public class AwtEditor extends Frame implements Editor {
         INSTANCE = new AwtEditor();
     }
 
-    Set<SimComponent>                  simComponents = new HashSet<>();
-    Map<SimComponent, AwtRenderObject> renderObjects = new ConcurrentHashMap<>();
-    EditorUser                         user;
-    RenderObjectAdapter                renderObjectAdapter;
-    View                               view;
-    Canvas                             canvas;
-    ToolBar                            toolbar;
-    Executor                           renderer      = Executors.newSingleThreadExecutor();
-    @NonFinal @Nullable SnappingMarker snappingPoint;
+    Set<CuprumComponent>                  cuprumComponents = new HashSet<>();
+    Map<EditorComponent, AwtRenderObject> renderObjects    = new ConcurrentHashMap<>();
+    EditorUser                            user;
+    RenderObjectAdapter                   renderObjectAdapter;
+    View                                  view;
+    Canvas                                canvas;
+    ToolBar                               toolbar;
+    Executor                              renderer         = Executors.newSingleThreadExecutor();
+    @NonFinal @Nullable SnappingPoint snappingPoint;
+    @NonFinal @Nullable Vector.N2     dragFromEditorPosition;
 
     public AwtEditor() {
         var size = new Vector.N2(800, 600);
@@ -140,26 +147,23 @@ public class AwtEditor extends Frame implements Editor {
                 var pos = view.transformCanvasToEditor(new Vector.N2(e.getX(), e.getY()));
                 user.getCursor().setPosition(pos);
 
+                // mouse dragging
+                if (dragFromEditorPosition != null) view.setPosition(pos.subi(dragFromEditorPosition).as2());
+
+                // refresh snapping point
                 var hadCandidate = snappingPoint != null;
                 var hasCandidate = new boolean[]{ false };
-                snappingPoint = simComponents.stream()
-                        .flatMap(comp -> comp.getSnappingPoints().map(snap -> new SnappingPointCandidate(comp, snap)))
-                        .filter(candidate -> Vector.dist(candidate.position, pos) < (double) SnappingMarker.DIAMETER / 2)
-                        .min(Comparator.<SnappingPointCandidate>comparingInt(snap -> snap.component.priorityLayer())
+                snappingPoint = getEditorComponents().flatMap(comp -> comp.getSnappingPoints().map(snap -> new SnappingPointCandidate(comp, snap)))
+                        .filter(candidate -> Vector.dist(candidate.position(), pos) < (double) SnappingMarker.DIAMETER / 2)
+                        .min(Comparator.<SnappingPointCandidate>comparingInt(snap -> snap.component().priorityLayer())
                                 .reversed()
-                                .thenComparingDouble(candidate -> Vector.dist(candidate.position, pos)))
+                                .thenComparingDouble(candidate -> Vector.dist(candidate.position(), pos)))
                         .map(candidate -> {
                             hasCandidate[0] = true;
                             return candidate.renderObject();
                         })
                         .orElse(null);
                 if (hadCandidate != hasCandidate[0] || hasCandidate[0]) refreshVisual();
-            }
-
-            private record SnappingPointCandidate(SimComponent component, Vector.N2 position) {
-                private SnappingMarker renderObject() {
-                    return new SnappingMarker(component, position);
-                }
             }
         });
         canvas.addMouseListener(new MouseAdapter() {
@@ -172,8 +176,6 @@ public class AwtEditor extends Frame implements Editor {
                     case MouseEvent.BUTTON1: // left click
                         user.triggerClickPrimary(pos, e.isShiftDown());
                         break;
-                    case MouseEvent.BUTTON2: // mouse wheel
-                        break;
                     case MouseEvent.BUTTON3: // right click
                         user.triggerClickSecondary(pos, e.isShiftDown());
                         break;
@@ -181,6 +183,19 @@ public class AwtEditor extends Frame implements Editor {
 
                 refreshEditorModeVisual();
                 refreshVisual();
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.getButton() != MouseEvent.BUTTON2) return;
+                var pos = snappingPoint == null ? new Vector.N2(e.getX(), e.getY()) : snappingPoint.getPosition();
+                dragFromEditorPosition = view.transformCanvasToEditor(pos);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.getButton() != MouseEvent.BUTTON2) return;
+                dragFromEditorPosition = null;
             }
         });
         canvas.setBackground(Color.LIGHT_GRAY);
@@ -205,31 +220,8 @@ public class AwtEditor extends Frame implements Editor {
         refreshEditorModeVisual();
     }
 
-    public Map<SimComponent, AwtRenderObject> getRenderObjects() {
+    public Map<EditorComponent, AwtRenderObject> getRenderObjects() {
         return Collections.unmodifiableMap(renderObjects);
-    }
-
-    @Override
-    public Stream<? extends SimComponent> getSimComponents() {
-        return simComponents.stream();
-    }
-
-    public void add(SimComponent component) {
-        final var adapter = getRenderObjectAdapter();
-        if (simComponents.add(component)) {
-            var renderObject = (AwtRenderObject) component.createRenderObject(adapter);
-            if (renderObject != null) renderObjects.put(component, renderObject);
-        }
-    }
-
-    @Override
-    public boolean remove(SimComponent component) {
-        return simComponents.remove(component) & renderObjects.remove(component) != null;
-    }
-
-    @Override
-    public void refreshVisual() {
-        renderer.execute(canvas::repaint);
     }
 
     private Stream<UniformRenderObject> getPrimaryRenderObjects() {
@@ -238,6 +230,34 @@ public class AwtEditor extends Frame implements Editor {
 
     private Stream<UniformRenderObject> getSecondaryRenderObjects() {
         return user.getRenderObjects().stream();
+    }
+
+    public void add(EditorComponent component) {
+        final var adapter = getRenderObjectAdapter();
+        if (cuprumComponents.add(component)) {
+            var renderObject = (AwtRenderObject) component.createRenderObject(adapter);
+            if (renderObject != null) renderObjects.put(component, renderObject);
+        }
+    }
+
+    @Override
+    public boolean remove(SimulationComponent component) {
+        // todo: remove component from meshes
+        return component.removeFromAncestors() & cuprumComponents.remove(component) & renderObjects.remove(component) != null;
+    }
+
+    @Override
+    public void refreshVisual() {
+        renderer.execute(canvas::repaint);
+    }
+
+    @Override
+    public void rescanMesh(WireMeshComponent newComponent, Vector position) {
+        var      components = getWireMeshComponents().filter(wmc -> wmc.getSnappingPoints().anyMatch(position::equals)).toList();
+        WireMesh mesh       = newComponent.getWireMesh();
+        for (var component : components)
+            mesh = mesh.add(component, position.as2());
+        newComponent.setWireMesh(mesh);
     }
 
     private void refreshEditorModeVisual() {

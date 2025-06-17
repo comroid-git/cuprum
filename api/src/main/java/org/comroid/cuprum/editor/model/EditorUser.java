@@ -7,10 +7,11 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.java.Log;
 import org.comroid.api.data.Vector;
-import org.comroid.cuprum.EngineDelegate;
 import org.comroid.cuprum.component.ConnectionPoint;
 import org.comroid.cuprum.component.Wire;
-import org.comroid.cuprum.component.model.SimComponent;
+import org.comroid.cuprum.component.model.abstr.EditorComponent;
+import org.comroid.cuprum.component.model.abstr.SimulationComponent;
+import org.comroid.cuprum.delegate.EngineDelegate;
 import org.comroid.cuprum.editor.Editor;
 import org.comroid.cuprum.editor.render.UniformRenderObject;
 import org.comroid.cuprum.spatial.Transform;
@@ -27,15 +28,15 @@ import java.util.function.Supplier;
 @ToString(exclude = { "editor" })
 @EqualsAndHashCode(exclude = { "editor" })
 public class EditorUser {
-    private final             Editor                   editor;
-    private final             Set<UniformRenderObject> renderObjects = new HashSet<>();
-    private final             Transform                cursor        = new Transform();
-    private                   EditorMode               mode          = EditorMode.INTERACT;
-    private @Setter @Nullable Supplier<SimComponent>   componentCtor;
-    private @Nullable         SimComponent             component;
+    private final             Editor                        editor;
+    private final             Set<UniformRenderObject>      renderObjects = new HashSet<>();
+    private final             Transform                     cursor        = new Transform();
+    private                   EditorMode                    mode          = EditorMode.INTERACT;
+    private @Setter @Nullable Supplier<SimulationComponent> componentCtor;
+    private @Nullable         SimulationComponent           component;
 
-    public @Nullable SimComponent getComponent() {
-        return component == null && componentCtor != null ? createComponent() : component;
+    public @Nullable EditorComponent getComponent() {
+        return component == null ? createComponent() : component;
     }
 
     public synchronized void setMode(EditorMode mode) {
@@ -48,7 +49,7 @@ public class EditorUser {
         };
     }
 
-    public synchronized @Nullable SimComponent createComponent() {
+    public synchronized @Nullable EditorComponent createComponent() {
         try {
             return componentCtor != null ? component = componentCtor.get() : null;
         } finally {
@@ -75,12 +76,12 @@ public class EditorUser {
 
             case TOOL_WIRE:
                 // buffer position
-                if (component instanceof Wire wire && wire.addSegment(new Wire.Segment(position))) break;
+                if (component instanceof Wire wire && wire.addSegment(new Wire.Segment(wire, position))) break;
                 throw new IllegalStateException("Failed to trigger click primary on wire");
 
             case TOOL_SOLDER:
                 // do not place solder when already snapped on one
-                if (Optional.ofNullable(editor.getSnappingPoint()).map(SimComponent.Holder::getComponent).orElse(null) instanceof ConnectionPoint) return;
+                if (Optional.ofNullable(editor.getSnappingPoint()).map(EditorComponent.Holder::getComponent).orElse(null) instanceof ConnectionPoint) return;
             case TOOL_OBJECT:
                 if (component == null) {
                     setMode(EditorMode.INTERACT);
@@ -89,16 +90,16 @@ public class EditorUser {
 
                 component.setTransform(new Transform(position));
                 editor.add(component);
+                editor.rescanMesh(component, position);
                 this.component = null;
-
                 break;
 
             case REMOVE:
                 var snap = editor.getSnappingPoint();
                 if (snap == null) return;
                 var comp = snap.getComponent();
-                editor.remove(comp);
-
+                if (comp instanceof SimulationComponent simComp && !simComp.getWireMesh().remove(simComp))
+                    throw new RuntimeException("Could not remove component %s from its WireMesh".formatted(simComp));
                 break;
         }
     }
@@ -115,8 +116,9 @@ public class EditorUser {
                 }
 
                 // place last point and finalize
-                if (shift) wire.addSegment(new Wire.Segment(position));
-                editor.add(component);
+                if (shift) wire.addSegment(new Wire.Segment(wire, position));
+                if (wire.getSegments().size() >= 2) editor.add(component);
+                component.getSnappingPoints().forEach(snap -> editor.rescanMesh(component, snap));
                 setMode(shift ? EditorMode.TOOL_WIRE : EditorMode.INTERACT);
 
                 break;

@@ -1,9 +1,9 @@
 package org.comroid.cuprum.engine;
 
 import lombok.Value;
-import org.comroid.cuprum.EngineDelegate;
 import org.comroid.cuprum.component.ConnectionPoint;
 import org.comroid.cuprum.component.Wire;
+import org.comroid.cuprum.delegate.EngineDelegate;
 import org.comroid.cuprum.physics.Material;
 import org.comroid.cuprum.simulation.component.SolderImpl;
 import org.comroid.cuprum.simulation.component.WireImpl;

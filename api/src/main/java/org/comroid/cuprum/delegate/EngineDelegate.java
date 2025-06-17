@@ -1,4 +1,4 @@
-package org.comroid.cuprum;
+package org.comroid.cuprum.delegate;
 
 import org.comroid.annotations.Instance;
 import org.comroid.cuprum.component.ConnectionPoint;

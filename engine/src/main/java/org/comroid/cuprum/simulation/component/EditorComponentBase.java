@@ -1,19 +1,19 @@
 package org.comroid.cuprum.simulation.component;
 
 import lombok.Data;
-import org.comroid.cuprum.component.model.SimComponent;
+import org.comroid.cuprum.component.model.abstr.EditorComponent;
 import org.comroid.cuprum.model.ITransform;
 import org.comroid.cuprum.spatial.Transform;
 
 @Data
-public abstract class SimComponentBase implements SimComponent {
+public abstract class EditorComponentBase implements EditorComponent {
     protected ITransform transform;
 
-    public SimComponentBase() {
+    public EditorComponentBase() {
         this(new Transform());
     }
 
-    public SimComponentBase(ITransform transform) {
+    public EditorComponentBase(ITransform transform) {
         this.transform = transform;
     }
 }
