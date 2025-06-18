@@ -5,30 +5,75 @@ import lombok.Value;
 import org.comroid.api.data.Vector;
 import org.comroid.cuprum.component.model.abstr.WireMeshComponent;
 
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Value
 @EqualsAndHashCode(of = { "id" }, callSuper = false)
-public class WireMesh extends ConcurrentHashMap<Vector.N2, WireMeshComponent> {
-    UUID id = UUID.randomUUID();
+public class WireMesh extends HashSet<WireMesh.OverlapPoint> {
+    UUID              id = UUID.randomUUID();
+    WireMeshComponent initComponent;
+    Vector.N2         initComponentPosition;
 
-    public WireMesh() {}
+    public WireMesh(WireMeshComponent initComponent, Vector.N2 initComponentPosition) {
+        this.initComponent         = initComponent;
+        this.initComponentPosition = initComponentPosition;
+
+        clear();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return size() <= 1;
+    }
+
+    @Override
+    public boolean contains(Object o) {
+        return find(o).filter(o::equals).isPresent();
+    }
+
+    @Override
+    public boolean add(OverlapPoint overlapPoint) {
+        overlapPoint.component.setWireMesh(this, false);
+        return super.add(overlapPoint);
+    }
+
+    @Override
+    public boolean remove(Object o) {
+        return find(0).filter(other -> {
+            other.component.setWireMesh(null);
+            return remove(other);
+        }).isPresent();
+    }
+
+    @Override
+    public void clear() {
+        super.clear();
+        add(new OverlapPoint(initComponent, initComponentPosition));
+    }
+
+    public Optional<OverlapPoint> find(Object o) {
+        return stream().filter(overlap -> overlap.equals(o) || overlap.component.equals(o) || overlap.position.equals(o)).findAny();
+    }
 
     @Override
     public String toString() {
         return "WireMesh{}";
     }
 
-    public WireMesh add(WireMeshComponent component, Vector.N2 position) {
-        WireMesh it = this, other = component.getWireMesh();
-        if (!it.equals(other)) component.setWireMesh(it = other);
-        it.put(position, component);
+    public WireMesh integrate(OverlapPoint overlap) {
+        var      component = overlap.component;
+        WireMesh it        = this, other = component.isWireMeshInitialized() ? component.getWireMesh() : null;
+
+        if (other != null && !other.isEmpty() && ((other != null && it.isEmpty()) || !it.equals(other)))
+            // try other if we only contain ourselves
+            component.setWireMesh(it = other);
+
+        // dont forget to add component to mesh
+        it.add(overlap);
         return it;
     }
 
-    public boolean remove(WireMeshComponent component) {
-        component.setWireMesh(null);
-        return super.remove(component) != null;
-    }
+    public record OverlapPoint(WireMeshComponent component, Vector.N2 position) {}
 }

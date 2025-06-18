@@ -5,7 +5,8 @@ import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.comroid.api.data.Vector;
 
-@Value@Setter
+@Value
+@Setter
 public class View {
     public static final int       BORDER_PADDING = 25;
     @NonFinal           Vector.N2 position       = Vector.N2.Zero;

@@ -1,6 +1,8 @@
 package org.comroid.cuprum.spatial;
 
+import lombok.EqualsAndHashCode;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.comroid.api.data.Vector;
@@ -10,6 +12,8 @@ import org.comroid.cuprum.model.ITransform;
 
 @Value
 @NonFinal
+@ToString(of = { "position", "scale" })
+@EqualsAndHashCode(of = { "position", "scale" })
 public class Transform implements ITransform {
     @NonFinal @Setter Vector.N2 position, scale;
 
@@ -45,7 +49,9 @@ public class Transform implements ITransform {
     }
 
     @Value
-    public static class Relative implements ITransform, Holder {
+    @ToString(of = { "transform", "positionOffset", "scaleOffset" })
+    @EqualsAndHashCode(of = { "transform", "positionOffset", "scaleOffset" })
+    public static class Relative implements Holder {
         ITransform transform;
         @NonFinal @Setter Vector.N2 positionOffset, scaleOffset;
 
@@ -61,7 +67,9 @@ public class Transform implements ITransform {
     }
 
     @Value
-    public static class CanvasToViewAdapter implements ITransform, Holder, ViewContainer {
+    @ToString(of = { "transform", "view" })
+    @EqualsAndHashCode(of = { "transform", "view" })
+    public static class EditorToCanvasAdapter implements Holder, ViewContainer {
         ITransform transform;
         View       view;
 

@@ -38,6 +38,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 @Value
@@ -253,10 +254,17 @@ public class AwtEditor extends Frame implements Editor {
 
     @Override
     public void rescanMesh(WireMeshComponent newComponent, Vector position) {
-        var      components = getWireMeshComponents().filter(wmc -> wmc.getSnappingPoints().anyMatch(position::equals)).toList();
-        WireMesh mesh       = newComponent.getWireMesh();
-        for (var component : components)
-            mesh = mesh.add(component, position.as2());
+        var overlaps = getWireMeshComponents().filter(Predicate.not(newComponent::equals))
+                .distinct()
+                .flatMap(wmc -> wmc.getSnappingPoints()
+                        .flatMap(snap -> newComponent.getSnappingPoints()
+                                .filter(pos -> Vector.dist(snap, pos) < SnappingMarker.DIAMETER)
+                                .map(pos -> new WireMesh.OverlapPoint(wmc, pos))))
+                .toList();
+        if (overlaps.isEmpty()) return;
+        WireMesh mesh = newComponent.getWireMesh();
+        for (var overlap : overlaps)
+            mesh = mesh.integrate(overlap);
         newComponent.setWireMesh(mesh);
     }
 

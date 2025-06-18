@@ -7,16 +7,17 @@ import org.comroid.cuprum.delegate.EngineDelegate;
 import org.comroid.cuprum.physics.Material;
 import org.comroid.cuprum.simulation.component.SolderImpl;
 import org.comroid.cuprum.simulation.component.WireImpl;
+import org.comroid.cuprum.spatial.Transform;
 
 @Value
 public class EngineDelegateImpl implements EngineDelegate {
     @Override
     public Wire createWire() {
-        return new WireImpl(1.5, Material.COPPER);
+        return new WireImpl(new Transform(), 1.5, Material.COPPER);
     }
 
     @Override
     public ConnectionPoint createConnectionPoint() {
-        return new SolderImpl();
+        return new SolderImpl(new Transform());
     }
 }

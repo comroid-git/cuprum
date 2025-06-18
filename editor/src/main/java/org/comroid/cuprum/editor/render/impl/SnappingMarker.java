@@ -21,7 +21,7 @@ public class SnappingMarker extends AwtRenderObject implements SnappingPoint {
 
     public SnappingMarker(EditorComponent target, Vector.N2 position) {
         this.component = target;
-        this.transform = new Transform.CanvasToViewAdapter(new Transform(position), getView());
+        this.transform = new Transform.EditorToCanvasAdapter(new Transform(position), getView());
     }
 
     @Override

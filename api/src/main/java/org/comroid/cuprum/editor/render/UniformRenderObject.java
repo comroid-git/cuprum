@@ -8,7 +8,7 @@ import org.comroid.cuprum.spatial.Transform;
 public interface UniformRenderObject extends EditorComponent.Holder, ViewContainer {
     @Override
     default ITransform getTransform() {
-        return new Transform.CanvasToViewAdapter(EditorComponent.Holder.super.getTransform(), getView());
+        return new Transform.EditorToCanvasAdapter(EditorComponent.Holder.super.getTransform(), getView());
     }
 
     default boolean outOfView() {
