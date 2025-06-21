@@ -1,6 +1,7 @@
 package org.comroid.cuprum.editor.component;
 
 import lombok.Value;
+import org.comroid.api.func.util.Debug;
 import org.comroid.api.func.util.Stopwatch;
 import org.comroid.api.func.util.Streams;
 import org.comroid.cuprum.component.Wire;
@@ -13,12 +14,12 @@ import org.comroid.cuprum.spatial.Transform;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Canvas extends JPanel {
@@ -40,15 +41,19 @@ public class Canvas extends JPanel {
 
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        g2.drawString(String.format("FPS: %.0f (%.2fms)", 1_000_000_000f / frameTimeNanos, frameTimeNanos / 1_000_000f),
-                10,
-                20);
         var user   = nativeEditor.getUser();
         var cursor = user.getCursor().getPosition();
-        g2.drawString(String.format("Position: %.0f %.0f", cursor.getX(), cursor.getY()), 10, 30);
-        g2.drawString(String.format("Mode: %s", user.getMode()), 10, 40);
+        drawString(g2,
+                String.format("FPS: %.0f (%.2fms)\nPosition: %.0f %.0f\nMode: %s",
+                        1_000_000_000f / frameTimeNanos,
+                        frameTimeNanos / 1_000_000f,
+                        cursor.getX(),
+                        cursor.getY(),
+                        user.getMode()),
+                10,
+                10);
 
-        drawDebugInfo(g2);
+        if (Debug.isDebug()) drawDebugInfo(g2);
         drawGrid(g2);
 
         Stream.concat(nativeEditor.getPrimaryRenderObjects(), nativeEditor.getSecondaryRenderObjects())
@@ -59,21 +64,34 @@ public class Canvas extends JPanel {
     }
 
     private void drawDebugInfo(Graphics2D g2) {
-        var offset = 50;
         var component = Optional.ofNullable(nativeEditor.getUser().getComponent())
                 .orElseGet(nativeEditor::getInspectComponent);
-
         if (component == null) return;
+        var fontHeight = g2.getFontMetrics().getHeight();
+        var offset     = fontHeight * 5;
+
         for (var infoSource : ComponentDebugInfoSource.ALL)
             if (infoSource.check.test(component)) {
-                var value = infoSource.mapper.apply(component);
-                g2.drawString("%s: %s".formatted(infoSource.name,
-                        value.getClass().isArray() || value instanceof Iterable
-                        ? Arrays.toString(value instanceof Iterable<?> iter
-                                          ? Streams.of(iter).toArray()
-                                          : (Object[]) value)
-                        : value), 10, offset += 10);
+                var value      = infoSource.mapper.apply(component);
+                var isIterable = value.getClass().isArray() || value instanceof Iterable;
+                var lines = drawString(g2,
+                        "%s: %s".formatted(infoSource.name,
+                                isIterable ? (value instanceof Iterable<?> iter
+                                              ? Streams.of(iter)
+                                              : Stream.of((Object[]) value)).map(String::valueOf)
+                                        .collect(Collectors.joining("\n\t- ", "[\n\t- ", "\n]")) : value),
+                        10,
+                        offset);
+                offset += fontHeight * lines + (isIterable ? 1 : 0);
             }
+    }
+
+    private int drawString(Graphics2D g2, String string, int x, int y) {
+        var lines      = string.split("\r?\n");
+        var fontHeight = g2.getFontMetrics().getHeight();
+        for (var line : lines)
+            g2.drawString(line.replaceAll("\t", "    "), x, y += fontHeight);
+        return lines.length;
     }
 
     private void drawGrid(Graphics2D g2) {
