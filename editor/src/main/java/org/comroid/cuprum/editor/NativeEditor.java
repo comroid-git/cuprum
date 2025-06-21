@@ -24,6 +24,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
@@ -170,8 +172,24 @@ public class NativeEditor extends JFrame implements Editor {
             }
         });
         canvas.setBackground(Color.LIGHT_GRAY);
-
         add(canvas, BorderLayout.CENTER);
+
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                switch (e.getKeyCode()) {
+                    case KeyEvent.VK_ESCAPE:
+                        System.exit(0);
+                        break;
+                    case KeyEvent.VK_W:
+                        user.setMode(EditorMode.TOOL_WIRE);
+                        break;
+                    case KeyEvent.VK_S:
+                        user.setMode(EditorMode.TOOL_SOLDER);
+                        break;
+                }
+            }
+        });
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
