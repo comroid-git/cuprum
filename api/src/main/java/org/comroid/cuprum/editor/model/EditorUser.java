@@ -18,6 +18,7 @@ import org.comroid.cuprum.model.PositionSupplier;
 import org.comroid.cuprum.spatial.Transform;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -35,6 +36,12 @@ public class EditorUser {
     private                   EditorMode                    mode          = EditorMode.INTERACT;
     private @Setter @Nullable Supplier<SimulationComponent> componentCtor;
     private @Nullable         SimulationComponent           component;
+
+    public Set<UniformRenderObject> getRenderObjects() {
+        synchronized (renderObjects) {
+            return Set.copyOf(renderObjects);
+        }
+    }
 
     public @Nullable EditorComponent getComponent() {
         return component == null ? createComponent() : component;
@@ -59,11 +66,13 @@ public class EditorUser {
     }
 
     public synchronized void refreshVisual() {
-        renderObjects.clear();
+        synchronized (renderObjects) {
+            renderObjects.clear();
 
-        if (component != null) {
-            var renderObject = component.createRenderObject(editor.getRenderObjectAdapter());
-            if (renderObject != null) renderObjects.add(renderObject);
+            if (component != null) {
+                var renderObject = component.createRenderObject(editor.getRenderObjectAdapter());
+                if (renderObject != null) renderObjects.add(renderObject);
+            }
         }
     }
 
@@ -81,8 +90,7 @@ public class EditorUser {
                 if (component instanceof Wire wire) {
                     if (wire.getSegments().isEmpty() && !position.equals(Vector.N2.Zero) && wire.getTransform()
                             .getPosition()
-                            .equals(Vector.N2.Zero))
-                        wire.setTransform(new Transform(position));
+                            .equals(Vector.N2.Zero)) wire.setTransform(new Transform(position));
                     else wire.addSegment(new Wire.Segment(wire, position));
                 }
                 break;

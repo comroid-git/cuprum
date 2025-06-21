@@ -37,7 +37,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -286,11 +285,13 @@ public class NativeEditor extends JFrame implements Editor {
     }
 
     public Map<EditorComponent, NativeRenderObject<?>> getRenderObjects() {
-        return Collections.unmodifiableMap(renderObjects);
+        synchronized (renderObjects) {
+            return Map.copyOf(renderObjects);
+        }
     }
 
     private Stream<UniformRenderObject> getPrimaryRenderObjects() {
-        return Stream.concat(Stream.ofNullable(snappingPoint), renderObjects.values().stream());
+        return Stream.concat(Stream.ofNullable(snappingPoint), getRenderObjects().values().stream());
     }
 
     private Stream<UniformRenderObject> getSecondaryRenderObjects() {
@@ -322,14 +323,18 @@ public class NativeEditor extends JFrame implements Editor {
         final var adapter = getRenderObjectAdapter();
         if (cuprumComponents.add(component)) {
             var renderObject = (NativeRenderObject<?>) component.createRenderObject(adapter);
-            if (renderObject != null) renderObjects.put(component, renderObject);
+            if (renderObject != null) synchronized (renderObjects) {
+                renderObjects.put(component, renderObject);
+            }
         }
     }
 
     @Override
     public boolean remove(SimulationComponent component) {
         // todo: remove component from meshes
-        return component.removeFromAncestors() & cuprumComponents.remove(component) & renderObjects.remove(component) != null;
+        synchronized (renderObjects) {
+            return component.removeFromAncestors() & cuprumComponents.remove(component) & renderObjects.remove(component) != null;
+        }
     }
 
     @Override
