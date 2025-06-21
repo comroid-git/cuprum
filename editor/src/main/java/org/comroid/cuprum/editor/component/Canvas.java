@@ -51,7 +51,7 @@ public class Canvas extends JPanel {
                         cursor.getY(),
                         user.getMode()),
                 10,
-                10);
+                5);
 
         if (Debug.isDebug()) drawDebugInfo(g2);
         drawGrid(g2);
