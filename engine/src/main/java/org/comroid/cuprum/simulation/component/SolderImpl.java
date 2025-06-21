@@ -12,8 +12,4 @@ public class SolderImpl extends SimulationComponentBase implements ConnectionPoi
     public SolderImpl(ITransform transform) {
         super(transform);
     }
-
-    public WireMesh getWireMesh() {
-        return wireMesh == null ? wireMesh = new WireMesh(this, getPosition()) : wireMesh;
-    }
 }

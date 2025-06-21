@@ -1,17 +1,24 @@
 package org.comroid.cuprum.component;
 
-import lombok.With;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.Value;
+import lombok.experimental.NonFinal;
 import org.comroid.api.data.Vector;
 import org.comroid.cuprum.component.model.abstr.SimulationComponent;
+import org.comroid.cuprum.component.model.abstr.WireMeshContainer;
 import org.comroid.cuprum.component.model.basic.Conductive;
 import org.comroid.cuprum.editor.render.RenderObjectAdapter;
 import org.comroid.cuprum.editor.render.UniformRenderObject;
+import org.comroid.cuprum.model.PositionSupplier;
 import org.comroid.cuprum.physics.Material;
-import org.jetbrains.annotations.NotNull;
+import org.comroid.cuprum.simulation.WireMesh;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -20,21 +27,12 @@ public interface Wire extends SimulationComponent, Conductive {
 
     @Override
     default double getLength() {
-        var iter = getSegments().iterator();
-        if (!iter.hasNext()) throw new IllegalStateException("Wire has no points");
-        var last = iter.next();
-        var dist = 0.0;
-        while (iter.hasNext()) {
-            var it = iter.next();
-            dist += it.length != null ? it.length : Vector.dist(last.position, it.position);
-            last = it;
-        }
-        return dist;
+        return getSegments().stream().mapToDouble(Segment::getLength).sum();
     }
 
     @Override
     default Stream<Vector.N2> getSnappingPoints() {
-        return getSegments().stream().map(Segment::position);
+        return Stream.concat(Stream.of(getPosition()), getSegments().stream().map(Segment::getPosition));
     }
 
     @Override
@@ -49,26 +47,31 @@ public interface Wire extends SimulationComponent, Conductive {
 
     boolean addSegment(Segment segment);
 
-    record Segment(Wire wire, Vector.N2 position, @With @Nullable Double length) implements Conductive {
-        public Segment(Wire wire, Vector.N2 position) {
-            this(wire, position, null);
-        }
+    @Override
+    default Stream<WireMesh.OverlapPoint> findOverlap(Vector.N2 snap) {
+        return //todo
+                getSnappingPoints().filter(pos -> Vector.dist(snap, pos) < 8)
+                        .map(pos -> new WireMesh.OverlapPoint(this, pos));
+    }
+
+    @Value
+    @AllArgsConstructor
+    @RequiredArgsConstructor
+    @ToString(exclude = { "wireMesh" })
+    @EqualsAndHashCode(exclude = { "wireMesh" })
+    class Segment implements Conductive, WireMeshContainer, PositionSupplier {
+        Wire      wire;
+        Vector.N2 position;
+        @Setter @NonFinal @Nullable Double   length   = null;
+        @Setter @NonFinal @Nullable WireMesh wireMesh = null;
 
         @Override
         public double getLength() {
             return Optional.ofNullable(length).orElseGet(() -> {
-                var iter = wire.getSegments().iterator();
-                if (!iter.hasNext()) throw new IllegalStateException("Wire has no points");
-
-                Segment last = null, it = null;
-                while (iter.hasNext()) {
-                    last = it;
-                    if (equals(it = iter.next())) break;
-                }
-                if (last == null) throw new IllegalStateException("Segment is first in Wire");
-                if (!equals(it)) throw new IllegalStateException("Segment not found in Wire");
-
-                return Vector.dist(last.position, it.position);
+                var segments = wire.getSegments();
+                var index    = segments.indexOf(this);
+                var prev     = index == 0 ? wire.getPosition() : segments.get(index - 1).position;
+                return Vector.dist(prev, position);
             });
         }
 
@@ -83,18 +86,13 @@ public interface Wire extends SimulationComponent, Conductive {
         }
 
         @Override
-        public boolean equals(Object o) {
-            return o instanceof Segment segment && Objects.equals(length(), segment.length()) && Objects.equals(position(), segment.position());
+        public boolean isWireMeshInitialized() {
+            return wireMesh != null;
         }
 
         @Override
-        public int hashCode() {
-            return Objects.hash(position(), length());
-        }
-
-        @Override
-        public @NotNull String toString() {
-            return "Segment{position=%s, length=%s, material=%s}".formatted(position, length, getMaterial());
+        public void setWireMesh(WireMesh mesh, boolean recursive) {
+            setWireMesh(mesh);
         }
     }
 }

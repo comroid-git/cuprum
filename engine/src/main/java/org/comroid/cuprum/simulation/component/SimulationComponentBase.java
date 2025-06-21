@@ -19,16 +19,20 @@ public abstract class SimulationComponentBase implements SimulationComponent {
         this.transform = transform;
     }
 
+    public final WireMesh getWireMesh() {
+        return wireMesh == null ? wireMesh = new WireMesh(this, getPosition()) : wireMesh;
+    }
+
+    @Override
+    public boolean isWireMeshInitialized() {
+        return wireMesh != null;
+    }
+
     public final void setWireMesh(WireMesh wireMesh, boolean recursive) {
         if (recursive && isWireMeshInitialized() && !this.wireMesh.equals(wireMesh)) {
             wireMesh.addAll(this.wireMesh);
             wireMesh.clear();
         }
         this.wireMesh = wireMesh;
-    }
-
-    @Override
-    public boolean isWireMeshInitialized() {
-        return wireMesh != null;
     }
 }

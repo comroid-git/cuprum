@@ -76,12 +76,19 @@ public class EditorUser {
 
             case TOOL_WIRE:
                 // buffer position
-                if (component instanceof Wire wire && wire.addSegment(new Wire.Segment(wire, position))) break;
+                if (component instanceof Wire wire) {
+                    if (wire.getSegments().isEmpty() && !position.equals(Vector.Zero) && wire.getTransform()
+                            .getPosition()
+                            .equals(Vector.Zero)) wire.setTransform(new Transform(position));
+                    else if (wire.addSegment(new Wire.Segment(wire, position))) break;
+                }
                 throw new IllegalStateException("Failed to trigger click primary on wire");
 
             case TOOL_SOLDER:
                 // do not place solder when already snapped on one
-                if (Optional.ofNullable(editor.getSnappingPoint()).map(EditorComponent.Holder::getComponent).orElse(null) instanceof ConnectionPoint) return;
+                if (Optional.ofNullable(editor.getSnappingPoint())
+                        .map(EditorComponent.Holder::getComponent)
+                        .orElse(null) instanceof ConnectionPoint) return;
             case TOOL_OBJECT:
                 if (component == null) {
                     setMode(EditorMode.INTERACT);

@@ -11,17 +11,22 @@ import org.comroid.cuprum.model.ITransform;
 import org.comroid.cuprum.spatial.Transform;
 
 import java.awt.*;
+import java.util.stream.Stream;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public class SnappingMarker extends AwtRenderObject implements SnappingPoint {
+public class SnappingMarker extends AwtRenderObject<EditorComponent> implements SnappingPoint {
     public static final int DIAMETER = 11;
-    EditorComponent component;
-    ITransform      transform;
+    ITransform transform;
 
     public SnappingMarker(EditorComponent target, Vector.N2 position) {
-        this.component = target;
+        super(target);
         this.transform = new Transform.EditorToCanvasAdapter(new Transform(position), getView());
+    }
+
+    @Override
+    public Stream<Vector.N2> getVertices() {
+        return Stream.of(getPosition());
     }
 
     @Override

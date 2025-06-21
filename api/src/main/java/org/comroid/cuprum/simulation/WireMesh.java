@@ -4,6 +4,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.comroid.api.data.Vector;
 import org.comroid.cuprum.component.model.abstr.WireMeshComponent;
+import org.comroid.cuprum.component.model.abstr.WireMeshContainer;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -54,7 +55,8 @@ public class WireMesh extends HashSet<WireMesh.OverlapPoint> {
     }
 
     public Optional<OverlapPoint> find(Object o) {
-        return stream().filter(overlap -> overlap.equals(o) || overlap.component.equals(o) || overlap.position.equals(o)).findAny();
+        return stream().filter(overlap -> overlap.equals(o) || overlap.component.equals(o) || overlap.position.equals(o))
+                .findAny();
     }
 
     @Override
@@ -75,5 +77,5 @@ public class WireMesh extends HashSet<WireMesh.OverlapPoint> {
         return it;
     }
 
-    public record OverlapPoint(WireMeshComponent component, Vector.N2 position) {}
+    public record OverlapPoint(WireMeshContainer component, Vector.N2 position) {}
 }

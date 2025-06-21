@@ -1,19 +1,13 @@
 package org.comroid.cuprum.component.model.abstr;
 
+import org.comroid.api.data.Vector;
 import org.comroid.cuprum.simulation.WireMesh;
 
-public interface WireMeshComponent extends CuprumComponent, SnappableComponent {
-    WireMesh getWireMesh();
+import java.util.stream.Stream;
 
-    default void setWireMesh(WireMesh mesh) {
-        setWireMesh(mesh, true);
-    }
-
-    boolean isWireMeshInitialized();
-
-    void setWireMesh(WireMesh mesh, boolean recursive);
-
-    default boolean removeFromAncestors() {
-        return getWireMesh().remove(this);
+public interface WireMeshComponent extends CuprumComponent, SnappableComponent, WireMeshContainer {
+    default Stream<WireMesh.OverlapPoint> findOverlap(Vector.N2 snap) {
+        return getSnappingPoints().filter(pos -> Vector.dist(snap, pos) < 8)
+                .map(pos -> new WireMesh.OverlapPoint(this, pos));
     }
 }

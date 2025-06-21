@@ -5,7 +5,6 @@ import lombok.Value;
 import org.comroid.cuprum.component.Wire;
 import org.comroid.cuprum.model.ITransform;
 import org.comroid.cuprum.physics.Material;
-import org.comroid.cuprum.simulation.WireMesh;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,10 +21,6 @@ public class WireImpl extends SimulationComponentBase implements Wire {
         super(transform);
         this.crossSection = crossSection;
         this.material     = material;
-    }
-
-    public WireMesh getWireMesh() {
-        return wireMesh == null ? wireMesh = new WireMesh(this, segments.getFirst().position()) : wireMesh;
     }
 
     public List<Segment> getSegments() {

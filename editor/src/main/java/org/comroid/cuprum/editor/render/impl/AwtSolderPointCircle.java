@@ -4,15 +4,19 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.comroid.cuprum.component.ConnectionPoint;
 import org.comroid.cuprum.editor.AwtEditor;
+import org.comroid.cuprum.editor.component.SolderPointCircle;
 import org.comroid.cuprum.editor.render.AwtRenderObject;
 
 import java.awt.*;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public class SolderPointCircle extends AwtRenderObject {
+public class AwtSolderPointCircle extends AwtRenderObject<ConnectionPoint> implements SolderPointCircle {
     public static final int DIAMETER = 8;
-    ConnectionPoint component;
+
+    public AwtSolderPointCircle(ConnectionPoint component) {
+        super(component);
+    }
 
     @Override
     public void paint(AwtEditor e, Graphics2D g) {

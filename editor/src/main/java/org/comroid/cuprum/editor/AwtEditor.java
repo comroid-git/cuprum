@@ -10,6 +10,7 @@ import org.comroid.cuprum.component.model.abstr.CuprumComponent;
 import org.comroid.cuprum.component.model.abstr.EditorComponent;
 import org.comroid.cuprum.component.model.abstr.SimulationComponent;
 import org.comroid.cuprum.component.model.abstr.WireMeshComponent;
+import org.comroid.cuprum.component.model.abstr.WireMeshContainer;
 import org.comroid.cuprum.editor.component.ToolBar;
 import org.comroid.cuprum.editor.model.EditorMode;
 import org.comroid.cuprum.editor.model.EditorUser;
@@ -255,11 +256,8 @@ public class AwtEditor extends Frame implements Editor {
     @Override
     public void rescanMesh(WireMeshComponent newComponent, Vector position) {
         var overlaps = getWireMeshComponents().filter(Predicate.not(newComponent::equals))
-                .distinct()
                 .flatMap(wmc -> wmc.getSnappingPoints()
-                        .flatMap(snap -> newComponent.getSnappingPoints()
-                                .filter(pos -> Vector.dist(snap, pos) < SnappingMarker.DIAMETER)
-                                .map(pos -> new WireMesh.OverlapPoint(wmc, pos))))
+                        .flatMap(snap -> newComponent.findOverlap(snap)))
                 .toList();
         if (overlaps.isEmpty()) return;
         WireMesh mesh = newComponent.getWireMesh();
