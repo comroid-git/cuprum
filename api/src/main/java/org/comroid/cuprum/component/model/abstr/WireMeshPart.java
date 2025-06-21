@@ -2,7 +2,7 @@ package org.comroid.cuprum.component.model.abstr;
 
 import org.comroid.cuprum.simulation.WireMeshNode;
 
-public interface WireMeshPart {
+public interface WireMeshPart extends CuprumComponent {
     WireMeshNode getWireMeshNode();
 
     default void setWireMeshNode(WireMeshNode mesh) {

@@ -50,12 +50,13 @@ public interface Wire extends SimulationComponent, Conductive {
     @Value
     @AllArgsConstructor
     @RequiredArgsConstructor
-    @ToString(exclude = { "wire", "wireMesh" }, doNotUseGetters = true)
-    @EqualsAndHashCode(exclude = { "wire", "wireMesh" }, doNotUseGetters = true)
+    @ToString(exclude = { "wire", "wireMeshNode" }, doNotUseGetters = true)
+    @EqualsAndHashCode(exclude = { "wire", "wireMeshNode" }, doNotUseGetters = true)
     class Segment implements Conductive, WireMeshPart, PositionSupplier {
-        Wire      wire;
+        Wire wire;
         Vector position;
-        @Setter @NonFinal @Nullable Double       length       = null;
+        @NonFinal @Nullable Double length = null, crossSection = null;
+        @NonFinal @Nullable Material material = null;
         @Setter @NonFinal @Nullable WireMeshNode wireMeshNode = null;
 
         public WireMeshNode getWireMeshNode() {
@@ -82,13 +83,28 @@ public interface Wire extends SimulationComponent, Conductive {
         }
 
         @Override
+        public void setLength(@Nullable Double length) {
+            this.length = length;
+        }
+
+        @Override
         public double getCrossSection() {
-            return wire.getCrossSection();
+            return Optional.ofNullable(crossSection).orElseGet(wire::getCrossSection);
+        }
+
+        @Override
+        public void setCrossSection(@Nullable Double crossSection) {
+            this.crossSection = crossSection;
         }
 
         @Override
         public Material getMaterial() {
-            return wire.getMaterial();
+            return Optional.ofNullable(material).orElseGet(wire::getMaterial);
+        }
+
+        @Override
+        public void setMaterial(@Nullable Material material) {
+            this.material = material;
         }
     }
 }

@@ -137,6 +137,7 @@ public class NativeEditor extends JFrame implements Editor {
                                 .thenComparingDouble(candidate -> Vector.dist(candidate.position(), pos)))
                         .map(candidate -> {
                             inspectComponent = candidate.component();
+                            inspector.update();
                             return candidate.renderObject();
                         })
                         .orElse(null);
@@ -233,6 +234,8 @@ public class NativeEditor extends JFrame implements Editor {
         inspectComponent       = null;
         snappingPoint          = null;
         dragFromEditorPosition = null;
+
+        inspector.update();
 
         synchronized (renderObjects) {
             renderObjects.clear();

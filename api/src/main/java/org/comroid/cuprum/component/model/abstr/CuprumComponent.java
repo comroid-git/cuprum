@@ -1,4 +1,5 @@
 package org.comroid.cuprum.component.model.abstr;
 
-public interface CuprumComponent {
-}
+import org.comroid.api.func.Specifiable;
+
+public interface CuprumComponent extends Specifiable<CuprumComponent> {}

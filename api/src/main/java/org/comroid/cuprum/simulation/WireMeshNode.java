@@ -4,6 +4,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.comroid.api.data.Vector;
 import org.comroid.api.info.Log;
+import org.comroid.cuprum.component.model.abstr.CuprumComponent;
 import org.comroid.cuprum.component.model.abstr.WireMeshPart;
 
 import java.util.HashSet;
@@ -13,7 +14,7 @@ import java.util.logging.Level;
 
 @Value
 @EqualsAndHashCode(of = { "id" }, callSuper = false)
-public class WireMeshNode extends HashSet<WireMeshNode.OverlapPoint> {
+public class WireMeshNode extends HashSet<WireMeshNode.OverlapPoint> implements CuprumComponent {
     UUID         id = UUID.randomUUID();
     WireMeshPart initParent;
     Vector       initPosition;
