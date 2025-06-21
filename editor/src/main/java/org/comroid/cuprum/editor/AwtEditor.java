@@ -10,7 +10,6 @@ import org.comroid.cuprum.component.model.abstr.CuprumComponent;
 import org.comroid.cuprum.component.model.abstr.EditorComponent;
 import org.comroid.cuprum.component.model.abstr.SimulationComponent;
 import org.comroid.cuprum.component.model.abstr.WireMeshComponent;
-import org.comroid.cuprum.component.model.abstr.WireMeshContainer;
 import org.comroid.cuprum.editor.component.ToolBar;
 import org.comroid.cuprum.editor.model.EditorMode;
 import org.comroid.cuprum.editor.model.EditorUser;
@@ -131,16 +130,46 @@ public class AwtEditor extends Frame implements Editor {
 
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                g2.drawString(String.format("FPS: %.0f (%.2fms)", 1_000_000_000f / frameTimeNanos, frameTimeNanos / 1_000_000f), 10, 20);
-                g2.drawString(String.format("Position: %.0f %.0f", user.getCursor().getPosition().getX(), user.getCursor().getPosition().getY()), 10, 30);
+                g2.drawString(String.format("FPS: %.0f (%.2fms)",
+                        1_000_000_000f / frameTimeNanos,
+                        frameTimeNanos / 1_000_000f), 10, 20);
+                g2.drawString(String.format("Position: %.0f %.0f",
+                        user.getCursor().getPosition().getX(),
+                        user.getCursor().getPosition().getY()), 10, 30);
                 g2.drawString(String.format("Object: %s", user.getComponent()), 10, 40);
                 g2.drawString(String.format("Mode: %s", user.getMode()), 10, 50);
+
+                drawGrid(g2);
 
                 Stream.concat(getPrimaryRenderObjects(), getSecondaryRenderObjects())
                         .flatMap(Streams.cast(AwtRenderObject.class))
                         .forEach(obj -> obj.paint(AwtEditor.this, g2));
 
                 frameTimeNanos = stopwatch.stop().toNanos();
+            }
+
+            private void drawGrid(Graphics2D g2) {
+                var halfHeight = getHeight() / 2;
+                var halfWidth  = getWidth() / 2;
+
+                // cross on 0
+                g2.setColor(Color.BLACK);
+                g2.drawLine(halfWidth, 0, halfWidth, getHeight());
+                g2.drawLine(0, halfHeight, getWidth(), halfHeight);
+
+                // cross on cursor
+                g2.setColor(Color.DARK_GRAY);
+                var cursor = view.transformEditorToCanvas(user.getCursor().getPosition());
+                g2.drawLine((int) cursor.getX(), 0, (int) cursor.getX(), getHeight());
+                g2.drawLine(0, (int) cursor.getY(), getWidth(), (int) cursor.getY());
+
+                // measurement sections
+                g2.setColor(Color.GRAY);
+                // todo
+
+                // grid lines
+                g2.setColor(Color.LIGHT_GRAY);
+                // todo
             }
         };
         canvas.addMouseMotionListener(new MouseMotionAdapter() {
@@ -155,8 +184,10 @@ public class AwtEditor extends Frame implements Editor {
                 // refresh snapping point
                 var hadCandidate = snappingPoint != null;
                 var hasCandidate = new boolean[]{ false };
-                snappingPoint = getEditorComponents().flatMap(comp -> comp.getSnappingPoints().map(snap -> new SnappingPointCandidate(comp, snap)))
-                        .filter(candidate -> Vector.dist(candidate.position(), pos) < (double) SnappingMarker.DIAMETER / 2)
+                snappingPoint = getEditorComponents().flatMap(comp -> comp.getSnappingPoints()
+                                .map(snap -> new SnappingPointCandidate(comp, snap)))
+                        .filter(candidate -> Vector.dist(candidate.position(),
+                                pos) < (double) SnappingMarker.DIAMETER / 2)
                         .min(Comparator.<SnappingPointCandidate>comparingInt(snap -> snap.component().priorityLayer())
                                 .reversed()
                                 .thenComparingDouble(candidate -> Vector.dist(candidate.position(), pos)))
@@ -256,8 +287,7 @@ public class AwtEditor extends Frame implements Editor {
     @Override
     public void rescanMesh(WireMeshComponent newComponent, Vector position) {
         var overlaps = getWireMeshComponents().filter(Predicate.not(newComponent::equals))
-                .flatMap(wmc -> wmc.getSnappingPoints()
-                        .flatMap(snap -> newComponent.findOverlap(snap)))
+                .flatMap(wmc -> wmc.getSnappingPoints().flatMap(snap -> newComponent.findOverlap(snap)))
                 .toList();
         if (overlaps.isEmpty()) return;
         WireMesh mesh = newComponent.getWireMesh();
