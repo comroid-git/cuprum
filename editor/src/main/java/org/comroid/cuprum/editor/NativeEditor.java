@@ -9,6 +9,7 @@ import org.comroid.cuprum.component.model.abstr.CuprumComponent;
 import org.comroid.cuprum.component.model.abstr.EditorComponent;
 import org.comroid.cuprum.component.model.abstr.SimulationComponent;
 import org.comroid.cuprum.editor.component.Canvas;
+import org.comroid.cuprum.editor.component.Inspector;
 import org.comroid.cuprum.editor.component.ToolBar;
 import org.comroid.cuprum.editor.model.EditorMode;
 import org.comroid.cuprum.editor.model.EditorUser;
@@ -44,7 +45,8 @@ import java.util.stream.Stream;
 @Value
 @EqualsAndHashCode(callSuper = true)
 public class NativeEditor extends JFrame implements Editor {
-    public static NativeEditor INSTANCE;
+    public static final double       WINDOW_FACTOR = 0.8;
+    public static       NativeEditor INSTANCE;
 
     public static void main(String[] args) {
         INSTANCE = new NativeEditor();
@@ -54,21 +56,21 @@ public class NativeEditor extends JFrame implements Editor {
     Set<CuprumComponent>                        cuprumComponents = new HashSet<>();
     Map<EditorComponent, NativeRenderObject<?>> renderObjects    = new ConcurrentHashMap<>();
     ExecutorService                             renderer         = Executors.newSingleThreadExecutor();
-
     // backend components
     EditorUser                 user;
     NativeRenderObject.Adapter renderObjectAdapter;
     View                       view;
-
     // frontend components
-    ToolBar toolbar;
-    Canvas  canvas;
+    ToolBar                    toolbar;
+    Canvas                     canvas;
+    Inspector                  inspector;
     @NonFinal @Nullable EditorComponent inspectComponent;
     @NonFinal @Nullable SnappingPoint   snappingPoint;
     @NonFinal @Nullable Vector.N2       dragFromEditorPosition;
 
     public NativeEditor() {
-        var size = new Vector.N2(800, 600);
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        var       size       = new Vector.N2(screenSize.width * WINDOW_FACTOR, screenSize.height * WINDOW_FACTOR);
 
         this.user                = new EditorUser(this);
         this.renderObjectAdapter = new NativeRenderObject.Adapter();
@@ -77,7 +79,6 @@ public class NativeEditor extends JFrame implements Editor {
         setSize((int) size.getX(), (int) size.getY());
         setLayout(new BorderLayout());
 
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         Dimension windowSize = getSize();
         int       x          = (screenSize.width - windowSize.width) / 2;
         int       y          = (screenSize.height - windowSize.height) / 2;
@@ -173,6 +174,9 @@ public class NativeEditor extends JFrame implements Editor {
         });
         canvas.setBackground(Color.LIGHT_GRAY);
         add(canvas, BorderLayout.CENTER);
+
+        inspector = new Inspector(this);
+        add(inspector, BorderLayout.EAST);
 
         addKeyListener(new KeyAdapter() {
             @Override
