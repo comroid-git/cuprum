@@ -1,6 +1,7 @@
 package org.comroid.cuprum.simulation.component;
 
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import lombok.Value;
 import org.comroid.cuprum.component.Wire;
 import org.comroid.cuprum.model.ITransform;
@@ -11,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Value
+@ToString(exclude = "segments")
 @EqualsAndHashCode(callSuper = true)
 public class WireImpl extends SimulationComponentBase implements Wire {
     List<Segment> segments = new ArrayList<>();
