@@ -18,7 +18,6 @@ import org.comroid.cuprum.model.PositionSupplier;
 import org.comroid.cuprum.spatial.Transform;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -107,7 +106,8 @@ public class EditorUser {
                 // do not place solder when already snapped on one
                 if (Optional.ofNullable(editor.getSnappingPoint())
                         .map(EditorComponent.Holder::getComponent)
-                        .orElse(null) instanceof ConnectionPoint) return;
+                        .filter(ConnectionPoint.class::isInstance)
+                        .isPresent()) return;
             case TOOL_OBJECT:
                 if (component == null) {
                     setMode(EditorMode.INTERACT);

@@ -46,7 +46,7 @@ public interface Editor extends ViewContainer {
 
     default void rescanMesh(WireMeshComponent newComponent, PositionSupplier position) {
         var overlaps = getWireMeshComponents().filter(Predicate.not(newComponent::equals))
-                .flatMap(wmc -> wmc.getSnappingPoints().flatMap(newComponent::findOverlap))
+                .flatMap(wmc -> newComponent.getSnappingPoints().flatMap(src -> wmc.findOverlap(src)))
                 .toList();
         if (overlaps.isEmpty()) return;
         WireMesh mesh = newComponent.getWireMesh();
