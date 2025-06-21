@@ -65,6 +65,14 @@ public class EditorUser {
         }
     }
 
+    public void clear() {
+        setMode(EditorMode.INTERACT);
+
+        synchronized (renderObjects) {
+            renderObjects.clear();
+        }
+    }
+
     public synchronized void refreshVisual() {
         synchronized (renderObjects) {
             renderObjects.clear();

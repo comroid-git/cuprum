@@ -87,7 +87,7 @@ public class NativeEditor extends JFrame implements Editor {
         toolbar.getFileMenu().new Listener() {
             @Override
             public void fileNew() {
-                // todo: clear everything
+                clear();
             }
         };
         toolbar.getModeMenu().new Listener() {
@@ -220,6 +220,19 @@ public class NativeEditor extends JFrame implements Editor {
 
     public Stream<UniformRenderObject> getSecondaryRenderObjects() {
         return user.getRenderObjects().stream();
+    }
+
+    public void clear() {
+        user.clear();
+        cuprumComponents.clear();
+
+        inspectComponent       = null;
+        snappingPoint          = null;
+        dragFromEditorPosition = null;
+
+        synchronized (renderObjects) {
+            renderObjects.clear();
+        }
     }
 
     private void renderer() {
