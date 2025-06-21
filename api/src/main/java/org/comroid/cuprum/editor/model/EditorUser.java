@@ -14,6 +14,7 @@ import org.comroid.cuprum.component.model.abstr.SimulationComponent;
 import org.comroid.cuprum.delegate.EngineDelegate;
 import org.comroid.cuprum.editor.Editor;
 import org.comroid.cuprum.editor.render.UniformRenderObject;
+import org.comroid.cuprum.model.PositionSupplier;
 import org.comroid.cuprum.spatial.Transform;
 import org.jetbrains.annotations.Nullable;
 
@@ -66,7 +67,8 @@ public class EditorUser {
         }
     }
 
-    public synchronized void triggerClickPrimary(Vector.N2 position, boolean shift) {
+    public synchronized void triggerClickPrimary(PositionSupplier source, boolean shift) {
+        var position = source.getPosition();
         getComponent();
 
         switch (mode) {
@@ -77,12 +79,13 @@ public class EditorUser {
             case TOOL_WIRE:
                 // buffer position
                 if (component instanceof Wire wire) {
-                    if (wire.getSegments().isEmpty() && !position.equals(Vector.Zero) && wire.getTransform()
+                    if (wire.getSegments().isEmpty() && !position.equals(Vector.N2.Zero) && wire.getTransform()
                             .getPosition()
-                            .equals(Vector.Zero)) wire.setTransform(new Transform(position));
-                    else if (wire.addSegment(new Wire.Segment(wire, position))) break;
+                            .equals(Vector.N2.Zero))
+                        wire.setTransform(new Transform(position));
+                    else wire.addSegment(new Wire.Segment(wire, position));
                 }
-                throw new IllegalStateException("Failed to trigger click primary on wire");
+                break;
 
             case TOOL_SOLDER:
                 // do not place solder when already snapped on one
@@ -97,7 +100,7 @@ public class EditorUser {
 
                 component.setTransform(new Transform(position));
                 editor.add(component);
-                editor.rescanMesh(component, position);
+                editor.rescanMesh(component, source);
                 this.component = null;
                 break;
 
@@ -111,7 +114,8 @@ public class EditorUser {
         }
     }
 
-    public synchronized void triggerClickSecondary(Vector.N2 position, boolean shift) {
+    public synchronized void triggerClickSecondary(PositionSupplier source, boolean shift) {
+        var position = source.getPosition();
         getComponent();
 
         //noinspection SwitchStatementWithTooFewBranches
@@ -123,9 +127,11 @@ public class EditorUser {
                 }
 
                 // place last point and finalize
-                if (shift) wire.addSegment(new Wire.Segment(wire, position));
-                if (wire.getSegments().size() >= 2) editor.add(component);
-                component.getSnappingPoints().forEach(snap -> editor.rescanMesh(component, snap));
+                //if (shift) wire.addSegment(new Wire.Segment(wire, position));
+                if (!wire.getSegments().isEmpty()) {
+                    editor.add(component);
+                    component.getSnappingPoints().forEach(snap -> editor.rescanMesh(component, snap));
+                }
                 setMode(shift ? EditorMode.TOOL_WIRE : EditorMode.INTERACT);
 
                 break;

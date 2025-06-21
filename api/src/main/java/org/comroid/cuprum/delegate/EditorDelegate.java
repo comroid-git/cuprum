@@ -10,5 +10,5 @@ import java.util.ServiceLoader;
 public interface EditorDelegate {
     @Instance EditorDelegate INSTANCE = ServiceLoader.load(EditorDelegate.class).findFirst().orElseThrow();
 
-    SnappingPoint createSnappingPoint(EditorComponent component, Vector.N2 position);
+    SnappingPoint createSnappingPoint(EditorComponent component, Vector position);
 }

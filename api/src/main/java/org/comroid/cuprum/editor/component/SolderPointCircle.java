@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 
 public interface SolderPointCircle extends RenderComponent<ConnectionPoint> {
     @Override
-    default Stream<Vector.N2> getVertices() {
+    default Stream<Vector> getVertices() {
         return Stream.of(getPosition());
     }
 }

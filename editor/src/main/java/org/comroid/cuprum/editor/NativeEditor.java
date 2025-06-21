@@ -10,18 +10,21 @@ import org.comroid.cuprum.component.model.abstr.CuprumComponent;
 import org.comroid.cuprum.component.model.abstr.EditorComponent;
 import org.comroid.cuprum.component.model.abstr.SimulationComponent;
 import org.comroid.cuprum.component.model.abstr.WireMeshComponent;
+import org.comroid.cuprum.component.model.abstr.WireMeshContainer;
 import org.comroid.cuprum.editor.component.ToolBar;
 import org.comroid.cuprum.editor.model.EditorMode;
 import org.comroid.cuprum.editor.model.EditorUser;
 import org.comroid.cuprum.editor.model.SnappingPoint;
 import org.comroid.cuprum.editor.model.SnappingPointCandidate;
-import org.comroid.cuprum.editor.render.AwtRenderObject;
-import org.comroid.cuprum.editor.render.RenderObjectAdapter;
+import org.comroid.cuprum.editor.render.NativeRenderObject;
 import org.comroid.cuprum.editor.render.UniformRenderObject;
 import org.comroid.cuprum.editor.render.impl.SnappingMarker;
+import org.comroid.cuprum.model.PositionSupplier;
 import org.comroid.cuprum.simulation.WireMesh;
+import org.comroid.cuprum.spatial.Transform;
 import org.jetbrains.annotations.Nullable;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -30,42 +33,45 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public class AwtEditor extends Frame implements Editor {
-    public static AwtEditor INSTANCE;
+public class NativeEditor extends JFrame implements Editor {
+    public static NativeEditor INSTANCE;
 
     public static void main(String[] args) {
-        INSTANCE = new AwtEditor();
+        INSTANCE = new NativeEditor();
     }
 
-    Set<CuprumComponent>                  cuprumComponents = new HashSet<>();
-    Map<EditorComponent, AwtRenderObject> renderObjects    = new ConcurrentHashMap<>();
-    EditorUser                            user;
-    RenderObjectAdapter                   renderObjectAdapter;
-    View                                  view;
-    Canvas                                canvas;
-    ToolBar                               toolbar;
-    Executor                              renderer         = Executors.newSingleThreadExecutor();
+    Set<CuprumComponent>                        cuprumComponents = new HashSet<>();
+    Map<EditorComponent, NativeRenderObject<?>> renderObjects    = new ConcurrentHashMap<>();
+    EditorUser                                  user;
+    NativeRenderObject.Adapter                  renderObjectAdapter;
+    View                                        view;
+    JPanel                                      canvas;
+    ToolBar                                     toolbar;
+    Executor                                    renderer         = Executors.newSingleThreadExecutor();
     @NonFinal @Nullable SnappingPoint snappingPoint;
     @NonFinal @Nullable Vector.N2     dragFromEditorPosition;
 
-    public AwtEditor() {
+    public NativeEditor() {
         var size = new Vector.N2(800, 600);
 
         this.user                = new EditorUser(this);
-        this.renderObjectAdapter = new AwtRenderObject.Adapter();
+        this.renderObjectAdapter = new NativeRenderObject.Adapter();
         this.view                = new View(size);
 
         setSize((int) size.getX(), (int) size.getY());
@@ -117,8 +123,8 @@ public class AwtEditor extends Frame implements Editor {
         };
         setMenuBar(toolbar);
 
-        canvas = new Canvas() {
-            private final Stopwatch stopwatch = new Stopwatch(AwtEditor.this);
+        canvas = new JPanel() {
+            private final Stopwatch stopwatch = new Stopwatch(NativeEditor.this);
             private       long      frameTimeNanos;
 
             @Override
@@ -136,16 +142,26 @@ public class AwtEditor extends Frame implements Editor {
                 g2.drawString(String.format("Position: %.0f %.0f",
                         user.getCursor().getPosition().getX(),
                         user.getCursor().getPosition().getY()), 10, 30);
-                g2.drawString(String.format("Object: %s", user.getComponent()), 10, 40);
-                g2.drawString(String.format("Mode: %s", user.getMode()), 10, 50);
+                g2.drawString(String.format("Mode: %s", user.getMode()), 10, 40);
 
+                drawDebugInfo(g2);
                 drawGrid(g2);
 
                 Stream.concat(getPrimaryRenderObjects(), getSecondaryRenderObjects())
-                        .flatMap(Streams.cast(AwtRenderObject.class))
-                        .forEach(obj -> obj.paint(AwtEditor.this, g2));
+                        .flatMap(Streams.cast(NativeRenderObject.class))
+                        .forEach(obj -> obj.paint(NativeEditor.this, g2));
 
                 frameTimeNanos = stopwatch.stop().toNanos();
+            }
+
+            private void drawDebugInfo(Graphics2D g2) {
+                var offset    = 50;
+                var component = user.getComponent();
+
+                if (component == null) return;
+                for (var infoSource : ComponentDebugInfoSource.ALL)
+                    if (infoSource.check.test(component)) g2.drawString("%s: %s".formatted(infoSource.name,
+                            infoSource.mapper.apply(component)), 10, offset += 10);
             }
 
             private void drawGrid(Graphics2D g2) {
@@ -171,6 +187,23 @@ public class AwtEditor extends Frame implements Editor {
                 g2.setColor(Color.LIGHT_GRAY);
                 // todo
             }
+
+            @Value
+            static class ComponentDebugInfoSource<T> {
+                static final Collection<ComponentDebugInfoSource<?>> ALL = List.of(new ComponentDebugInfoSource<>(
+                                "Transform",
+                                $ -> true,
+                                Transform.Holder::getTransform),
+                        new ComponentDebugInfoSource<>("Snapping Points",
+                                $ -> true,
+                                it -> it.getSnappingPoints().map(PositionSupplier::getPosition).toArray(Vector[]::new)),
+                        new ComponentDebugInfoSource<>("WireMesh",
+                                WireMeshContainer.class::isInstance,
+                                comp -> ((WireMeshContainer) comp).getWireMesh()));
+                String                       name;
+                Predicate<EditorComponent>   check;
+                Function<EditorComponent, T> mapper;
+            }
         };
         canvas.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
@@ -185,6 +218,7 @@ public class AwtEditor extends Frame implements Editor {
                 var hadCandidate = snappingPoint != null;
                 var hasCandidate = new boolean[]{ false };
                 snappingPoint = getEditorComponents().flatMap(comp -> comp.getSnappingPoints()
+                                .map(PositionSupplier::getPosition)
                                 .map(snap -> new SnappingPointCandidate(comp, snap)))
                         .filter(candidate -> Vector.dist(candidate.position(),
                                 pos) < (double) SnappingMarker.DIAMETER / 2)
@@ -197,13 +231,16 @@ public class AwtEditor extends Frame implements Editor {
                         })
                         .orElse(null);
                 if (hadCandidate != hasCandidate[0] || hasCandidate[0]) refreshVisual();
+
+                refreshVisual();
             }
         });
         canvas.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                var pos = snappingPoint == null ? new Vector.N2(e.getX(), e.getY()) : snappingPoint.getPosition();
-                pos = view.transformCanvasToEditor(pos);
+                var pos = PositionSupplier.of(view.transformCanvasToEditor(snappingPoint == null
+                                                                           ? new Vector.N2(e.getX(), e.getY())
+                                                                           : snappingPoint.getPosition()));
 
                 switch (e.getButton()) {
                     case MouseEvent.BUTTON1: // left click
@@ -249,11 +286,13 @@ public class AwtEditor extends Frame implements Editor {
             }
         });
 
+        renderer.execute(() -> {while (true) canvas.repaint();});
+
         setVisible(true);
         refreshEditorModeVisual();
     }
 
-    public Map<EditorComponent, AwtRenderObject> getRenderObjects() {
+    public Map<EditorComponent, NativeRenderObject> getRenderObjects() {
         return Collections.unmodifiableMap(renderObjects);
     }
 
@@ -268,7 +307,7 @@ public class AwtEditor extends Frame implements Editor {
     public void add(EditorComponent component) {
         final var adapter = getRenderObjectAdapter();
         if (cuprumComponents.add(component)) {
-            var renderObject = (AwtRenderObject) component.createRenderObject(adapter);
+            var renderObject = (NativeRenderObject) component.createRenderObject(adapter);
             if (renderObject != null) renderObjects.put(component, renderObject);
         }
     }
@@ -281,13 +320,13 @@ public class AwtEditor extends Frame implements Editor {
 
     @Override
     public void refreshVisual() {
-        renderer.execute(canvas::repaint);
+        //renderer.execute(canvas::repaint);
     }
 
     @Override
-    public void rescanMesh(WireMeshComponent newComponent, Vector position) {
+    public void rescanMesh(WireMeshComponent newComponent, PositionSupplier position) {
         var overlaps = getWireMeshComponents().filter(Predicate.not(newComponent::equals))
-                .flatMap(wmc -> wmc.getSnappingPoints().flatMap(snap -> newComponent.findOverlap(snap)))
+                .flatMap(wmc -> wmc.getSnappingPoints().flatMap(newComponent::findOverlap))
                 .toList();
         if (overlaps.isEmpty()) return;
         WireMesh mesh = newComponent.getWireMesh();

@@ -20,7 +20,7 @@ public abstract class SimulationComponentBase implements SimulationComponent {
     }
 
     public final WireMesh getWireMesh() {
-        return wireMesh == null ? wireMesh = new WireMesh(this, getPosition()) : wireMesh;
+        return !isWireMeshInitialized() ? wireMesh = new WireMesh(this, getPosition()) : wireMesh;
     }
 
     @Override

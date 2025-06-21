@@ -3,7 +3,6 @@ package org.comroid.cuprum.simulation;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.comroid.api.data.Vector;
-import org.comroid.cuprum.component.model.abstr.WireMeshComponent;
 import org.comroid.cuprum.component.model.abstr.WireMeshContainer;
 
 import java.util.HashSet;
@@ -14,12 +13,12 @@ import java.util.UUID;
 @EqualsAndHashCode(of = { "id" }, callSuper = false)
 public class WireMesh extends HashSet<WireMesh.OverlapPoint> {
     UUID              id = UUID.randomUUID();
-    WireMeshComponent initComponent;
-    Vector.N2         initComponentPosition;
+    WireMeshContainer initParent;
+    Vector            initPosition;
 
-    public WireMesh(WireMeshComponent initComponent, Vector.N2 initComponentPosition) {
-        this.initComponent         = initComponent;
-        this.initComponentPosition = initComponentPosition;
+    public WireMesh(WireMeshContainer initParent, Vector initPosition) {
+        this.initParent   = initParent;
+        this.initPosition = initPosition;
 
         clear();
     }
@@ -51,7 +50,7 @@ public class WireMesh extends HashSet<WireMesh.OverlapPoint> {
     @Override
     public void clear() {
         super.clear();
-        add(new OverlapPoint(initComponent, initComponentPosition));
+        add(new OverlapPoint(initParent, initPosition));
     }
 
     public Optional<OverlapPoint> find(Object o) {
@@ -77,5 +76,5 @@ public class WireMesh extends HashSet<WireMesh.OverlapPoint> {
         return it;
     }
 
-    public record OverlapPoint(WireMeshContainer component, Vector.N2 position) {}
+    public record OverlapPoint(WireMeshContainer component, Vector position) {}
 }

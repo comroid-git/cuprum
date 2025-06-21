@@ -10,7 +10,7 @@ import org.comroid.cuprum.editor.render.impl.SnappingMarker;
 @Value
 public class AwtEditorDelegate implements EditorDelegate {
     @Override
-    public SnappingPoint createSnappingPoint(EditorComponent component, Vector.N2 position) {
+    public SnappingPoint createSnappingPoint(EditorComponent component, Vector position) {
         return new SnappingMarker(component, position);
     }
 }

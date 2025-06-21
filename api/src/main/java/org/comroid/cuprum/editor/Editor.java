@@ -1,6 +1,5 @@
 package org.comroid.cuprum.editor;
 
-import org.comroid.api.data.Vector;
 import org.comroid.api.func.util.Streams;
 import org.comroid.cuprum.component.model.abstr.CuprumComponent;
 import org.comroid.cuprum.component.model.abstr.EditorComponent;
@@ -9,6 +8,7 @@ import org.comroid.cuprum.component.model.abstr.WireMeshComponent;
 import org.comroid.cuprum.editor.model.SnappingPoint;
 import org.comroid.cuprum.editor.model.ViewContainer;
 import org.comroid.cuprum.editor.render.RenderObjectAdapter;
+import org.comroid.cuprum.model.PositionSupplier;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
@@ -44,5 +44,5 @@ public interface Editor extends ViewContainer {
 
     void refreshVisual();
 
-    void rescanMesh(WireMeshComponent newComponent, Vector position);
+    void rescanMesh(WireMeshComponent newComponent, PositionSupplier position);
 }

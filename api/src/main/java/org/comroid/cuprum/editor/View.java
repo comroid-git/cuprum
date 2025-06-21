@@ -9,8 +9,8 @@ import org.comroid.api.data.Vector;
 @Setter
 public class View {
     public static final int       BORDER_PADDING = 25;
-    @NonFinal           Vector.N2 position       = Vector.N2.Zero;
-    @NonFinal           Vector.N2 size;
+    @NonFinal           Vector position       = Vector.N2.Zero;
+    @NonFinal           Vector size;
 
     public View(Vector.N2 size) {
         this.size = size;

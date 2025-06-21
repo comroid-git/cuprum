@@ -31,8 +31,8 @@ public interface Wire extends SimulationComponent, Conductive {
     }
 
     @Override
-    default Stream<Vector.N2> getSnappingPoints() {
-        return Stream.concat(Stream.of(getPosition()), getSegments().stream().map(Segment::getPosition));
+    default Stream<PositionSupplier> getSnappingPoints() {
+        return Stream.concat(Stream.of(this), getSegments().stream());
     }
 
     @Override
@@ -45,25 +45,32 @@ public interface Wire extends SimulationComponent, Conductive {
         return -100;
     }
 
-    boolean addSegment(Segment segment);
-
-    @Override
-    default Stream<WireMesh.OverlapPoint> findOverlap(Vector.N2 snap) {
-        return //todo
-                getSnappingPoints().filter(pos -> Vector.dist(snap, pos) < 8)
-                        .map(pos -> new WireMesh.OverlapPoint(this, pos));
-    }
+    void addSegment(Segment segment);
 
     @Value
     @AllArgsConstructor
     @RequiredArgsConstructor
-    @ToString(exclude = { "wireMesh" })
-    @EqualsAndHashCode(exclude = { "wireMesh" })
+    @ToString(exclude = { "wire", "wireMesh" }, doNotUseGetters = true)
+    @EqualsAndHashCode(exclude = { "wire", "wireMesh" }, doNotUseGetters = true)
     class Segment implements Conductive, WireMeshContainer, PositionSupplier {
         Wire      wire;
-        Vector.N2 position;
+        Vector position;
         @Setter @NonFinal @Nullable Double   length   = null;
         @Setter @NonFinal @Nullable WireMesh wireMesh = null;
+
+        public WireMesh getWireMesh() {
+            return !isWireMeshInitialized() ? wireMesh = new WireMesh(this, position) : wireMesh;
+        }
+
+        @Override
+        public boolean isWireMeshInitialized() {
+            return wireMesh != null;
+        }
+
+        @Override
+        public void setWireMesh(WireMesh mesh, boolean recursive) {
+            setWireMesh(mesh);
+        }
 
         @Override
         public double getLength() {
@@ -83,16 +90,6 @@ public interface Wire extends SimulationComponent, Conductive {
         @Override
         public Material getMaterial() {
             return wire.getMaterial();
-        }
-
-        @Override
-        public boolean isWireMeshInitialized() {
-            return wireMesh != null;
-        }
-
-        @Override
-        public void setWireMesh(WireMesh mesh, boolean recursive) {
-            setWireMesh(mesh);
         }
     }
 }

@@ -28,7 +28,7 @@ public class WireImpl extends SimulationComponentBase implements Wire {
     }
 
     @Override
-    public boolean addSegment(Segment segment) {
-        return segments.add(segment);
+    public void addSegment(Segment segment) {
+        segments.add(segment);
     }
 }

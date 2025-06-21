@@ -15,17 +15,17 @@ import org.comroid.cuprum.model.ITransform;
 @ToString(of = { "position", "scale" })
 @EqualsAndHashCode(of = { "position", "scale" })
 public class Transform implements ITransform {
-    @NonFinal @Setter Vector.N2 position, scale;
+    @NonFinal @Setter Vector position, scale;
 
     public Transform() {
         this(Vector.N2.Zero);
     }
 
-    public Transform(Vector.N2 position) {
+    public Transform(Vector position) {
         this(position, Vector.N2.One);
     }
 
-    public Transform(Vector.N2 position, Vector.N2 scale) {
+    public Transform(Vector position, Vector scale) {
         this.position = position;
         this.scale    = scale;
     }
@@ -38,12 +38,12 @@ public class Transform implements ITransform {
         }
 
         @Override
-        default Vector.N2 getPosition() {
+        default Vector getPosition() {
             return getTransform().getPosition();
         }
 
         @Override
-        default Vector.N2 getScale() {
+        default Vector getScale() {
             return getTransform().getScale();
         }
     }
@@ -53,16 +53,16 @@ public class Transform implements ITransform {
     @EqualsAndHashCode(of = { "transform", "positionOffset", "scaleOffset" })
     public static class Relative implements Holder {
         ITransform transform;
-        @NonFinal @Setter Vector.N2 positionOffset, scaleOffset;
+        @NonFinal @Setter Vector positionOffset, scaleOffset;
 
         @Override
-        public Vector.N2 getPosition() {
-            return transform.getPosition().addi(positionOffset).as2();
+        public Vector getPosition() {
+            return transform.getPosition().addi(positionOffset);
         }
 
         @Override
-        public Vector.N2 getScale() {
-            return transform.getScale().muli(scaleOffset).as2();
+        public Vector getScale() {
+            return transform.getScale().muli(scaleOffset);
         }
     }
 
@@ -74,12 +74,12 @@ public class Transform implements ITransform {
         View       view;
 
         @Override
-        public Vector.N2 getPosition() {
+        public Vector getPosition() {
             return view.transformEditorToCanvas(transform.getPosition());
         }
 
         @Override
-        public Vector.N2 getScale() {
+        public Vector getScale() {
             return transform.getScale();
         }
     }

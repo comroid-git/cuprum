@@ -8,11 +8,13 @@ import java.util.stream.Stream;
 
 public interface WireLine extends RenderComponent<Wire> {
     @Override
-    default Stream<Vector.N2> getVertices() {
-        return Stream.concat(Stream.of(getPosition()),
+    default Stream<Vector> getVertices() {
+        var view     = getView();
+        var position = getPosition();
+        return Stream.concat(Stream.of(position),
                 getComponent().getSegments()
                         .stream()
                         .map(Wire.Segment::getPosition)
-                        .map(getView()::transformEditorToCanvas));
+                        .map(view::transformEditorToCanvas));
     }
 }

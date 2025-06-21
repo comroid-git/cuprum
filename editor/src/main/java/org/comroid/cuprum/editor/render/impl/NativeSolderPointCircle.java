@@ -3,23 +3,23 @@ package org.comroid.cuprum.editor.render.impl;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.comroid.cuprum.component.ConnectionPoint;
-import org.comroid.cuprum.editor.AwtEditor;
+import org.comroid.cuprum.editor.NativeEditor;
 import org.comroid.cuprum.editor.component.SolderPointCircle;
-import org.comroid.cuprum.editor.render.AwtRenderObject;
+import org.comroid.cuprum.editor.render.NativeRenderObject;
 
 import java.awt.*;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public class AwtSolderPointCircle extends AwtRenderObject<ConnectionPoint> implements SolderPointCircle {
+public class NativeSolderPointCircle extends NativeRenderObject<ConnectionPoint> implements SolderPointCircle {
     public static final int DIAMETER = 8;
 
-    public AwtSolderPointCircle(ConnectionPoint component) {
+    public NativeSolderPointCircle(ConnectionPoint component) {
         super(component);
     }
 
     @Override
-    public void paint(AwtEditor e, Graphics2D g) {
+    public void paint(NativeEditor e, Graphics2D g) {
         if (outOfView()) return;
 
         var pos    = getPosition();
