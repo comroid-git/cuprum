@@ -42,7 +42,5 @@ public interface Editor extends ViewContainer {
 
     boolean remove(SimulationComponent component);
 
-    void refreshVisual();
-
     void rescanMesh(WireMeshComponent newComponent, PositionSupplier position);
 }

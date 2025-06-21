@@ -6,6 +6,8 @@ import lombok.experimental.NonFinal;
 import org.comroid.api.data.Vector;
 import org.comroid.api.func.util.Stopwatch;
 import org.comroid.api.func.util.Streams;
+import org.comroid.api.info.Log;
+import org.comroid.cuprum.component.Wire;
 import org.comroid.cuprum.component.model.abstr.CuprumComponent;
 import org.comroid.cuprum.component.model.abstr.EditorComponent;
 import org.comroid.cuprum.component.model.abstr.SimulationComponent;
@@ -33,6 +35,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -41,10 +44,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 import java.util.stream.Stream;
 
 @Value
@@ -63,7 +67,7 @@ public class NativeEditor extends JFrame implements Editor {
     View                                        view;
     JPanel                                      canvas;
     ToolBar                                     toolbar;
-    Executor                                    renderer         = Executors.newSingleThreadExecutor();
+    ExecutorService                             renderer         = Executors.newSingleThreadExecutor();
     @NonFinal @Nullable SnappingPoint snappingPoint;
     @NonFinal @Nullable Vector.N2     dragFromEditorPosition;
 
@@ -94,15 +98,11 @@ public class NativeEditor extends JFrame implements Editor {
             @Override
             public void modeInteract() {
                 user.setMode(EditorMode.INTERACT);
-                refreshEditorModeVisual();
-                refreshVisual();
             }
 
             @Override
             public void modeRemove() {
                 user.setMode(EditorMode.REMOVE);
-                refreshEditorModeVisual();
-                refreshVisual();
             }
         };
         toolbar.getModeMenu().getInsertToolMenu()
@@ -110,15 +110,11 @@ public class NativeEditor extends JFrame implements Editor {
             @Override
             public void toolWire() {
                 user.setMode(EditorMode.TOOL_WIRE);
-                refreshEditorModeVisual();
-                refreshVisual();
             }
 
             @Override
             public void toolSolder() {
                 user.setMode(EditorMode.TOOL_SOLDER);
-                refreshEditorModeVisual();
-                refreshVisual();
             }
         };
         setMenuBar(toolbar);
@@ -226,8 +222,6 @@ public class NativeEditor extends JFrame implements Editor {
                 if (dragFromEditorPosition != null) view.setPosition(pos.subi(dragFromEditorPosition).as2());
 
                 // refresh snapping point
-                var hadCandidate = snappingPoint != null;
-                var hasCandidate = new boolean[]{ false };
                 snappingPoint = getEditorComponents().flatMap(comp -> comp.getSnappingPoints()
                                 .map(PositionSupplier::getPosition)
                                 .map(snap -> new SnappingPointCandidate(comp, snap)))
@@ -236,14 +230,8 @@ public class NativeEditor extends JFrame implements Editor {
                         .min(Comparator.<SnappingPointCandidate>comparingInt(snap -> snap.component().priorityLayer())
                                 .reversed()
                                 .thenComparingDouble(candidate -> Vector.dist(candidate.position(), pos)))
-                        .map(candidate -> {
-                            hasCandidate[0] = true;
-                            return candidate.renderObject();
-                        })
+                        .map(SnappingPointCandidate::renderObject)
                         .orElse(null);
-                if (hadCandidate != hasCandidate[0] || hasCandidate[0]) refreshVisual();
-
-                refreshVisual();
             }
         });
         canvas.addMouseListener(new MouseAdapter() {
@@ -261,9 +249,6 @@ public class NativeEditor extends JFrame implements Editor {
                         user.triggerClickSecondary(pos, e.isShiftDown());
                         break;
                 }
-
-                refreshEditorModeVisual();
-                refreshVisual();
             }
 
             @Override
@@ -287,23 +272,20 @@ public class NativeEditor extends JFrame implements Editor {
             public void componentResized(ComponentEvent e) {
                 var size = getSize();
                 view.setSize(new Vector.N2(size.width, size.height));
-                refreshVisual();
             }
         });
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                dispose();
+                System.exit(0);
             }
         });
 
-        renderer.execute(() -> {while (true) canvas.repaint();});
-
         setVisible(true);
-        refreshEditorModeVisual();
+        renderer.execute(this::renderer);
     }
 
-    public Map<EditorComponent, NativeRenderObject> getRenderObjects() {
+    public Map<EditorComponent, NativeRenderObject<?>> getRenderObjects() {
         return Collections.unmodifiableMap(renderObjects);
     }
 
@@ -315,10 +297,31 @@ public class NativeEditor extends JFrame implements Editor {
         return user.getRenderObjects().stream();
     }
 
+    private void renderer() {
+        while (isEnabled()) {
+            try {
+                canvas.repaint();
+                user.refreshVisual();
+
+                // apply user mode to toolbar
+                var mode = user.getMode();
+                var menu = toolbar.getModeMenu();
+                menu.getModeInteract().setEnabled(mode != EditorMode.INTERACT);
+                menu.getModeRemove().setEnabled(mode != EditorMode.REMOVE);
+
+                var itm = menu.getInsertToolMenu();
+                itm.getToolWire().setEnabled(mode != EditorMode.TOOL_WIRE);
+                itm.getToolSolder().setEnabled(mode != EditorMode.TOOL_SOLDER);
+            } catch (Throwable t) {
+                Log.at(Level.SEVERE, "Error in render thread", t);
+            }
+        }
+    }
+
     public void add(EditorComponent component) {
         final var adapter = getRenderObjectAdapter();
         if (cuprumComponents.add(component)) {
-            var renderObject = (NativeRenderObject) component.createRenderObject(adapter);
+            var renderObject = (NativeRenderObject<?>) component.createRenderObject(adapter);
             if (renderObject != null) renderObjects.put(component, renderObject);
         }
     }
@@ -327,11 +330,6 @@ public class NativeEditor extends JFrame implements Editor {
     public boolean remove(SimulationComponent component) {
         // todo: remove component from meshes
         return component.removeFromAncestors() & cuprumComponents.remove(component) & renderObjects.remove(component) != null;
-    }
-
-    @Override
-    public void refreshVisual() {
-        //renderer.execute(canvas::repaint);
     }
 
     @Override
@@ -344,19 +342,5 @@ public class NativeEditor extends JFrame implements Editor {
         for (var overlap : overlaps)
             mesh = mesh.integrate(overlap);
         newComponent.setWireMesh(mesh);
-    }
-
-    private void refreshEditorModeVisual() {
-        user.refreshVisual();
-
-        // apply user mode to toolbar
-        var mode = user.getMode();
-        var menu = toolbar.getModeMenu();
-        menu.getModeInteract().setEnabled(mode != EditorMode.INTERACT);
-        menu.getModeRemove().setEnabled(mode != EditorMode.REMOVE);
-
-        var itm = menu.getInsertToolMenu();
-        itm.getToolWire().setEnabled(mode != EditorMode.TOOL_WIRE);
-        itm.getToolSolder().setEnabled(mode != EditorMode.TOOL_SOLDER);
     }
 }
