@@ -9,10 +9,12 @@ import org.comroid.cuprum.editor.model.SnappingPoint;
 import org.comroid.cuprum.editor.model.ViewContainer;
 import org.comroid.cuprum.editor.render.RenderObjectAdapter;
 import org.comroid.cuprum.model.PositionSupplier;
+import org.comroid.cuprum.simulation.WireMesh;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public interface Editor extends ViewContainer {
@@ -42,5 +44,14 @@ public interface Editor extends ViewContainer {
 
     boolean remove(SimulationComponent component);
 
-    void rescanMesh(WireMeshComponent newComponent, PositionSupplier position);
+    default void rescanMesh(WireMeshComponent newComponent, PositionSupplier position) {
+        var overlaps = getWireMeshComponents().filter(Predicate.not(newComponent::equals))
+                .flatMap(wmc -> wmc.getSnappingPoints().flatMap(newComponent::findOverlap))
+                .toList();
+        if (overlaps.isEmpty()) return;
+        WireMesh mesh = newComponent.getWireMesh();
+        for (var overlap : overlaps)
+            mesh = mesh.integrate(overlap);
+        newComponent.setWireMesh(mesh);
+    }
 }
