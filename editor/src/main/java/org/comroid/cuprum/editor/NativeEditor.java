@@ -198,15 +198,19 @@ public class NativeEditor extends JFrame implements Editor {
             @Value
             static class ComponentDebugInfoSource<T> {
                 static final Collection<ComponentDebugInfoSource<?>> ALL = List.of(new ComponentDebugInfoSource<>(
-                                "Transform",
+                                "Selected Object",
                                 $ -> true,
-                                Transform.Holder::getTransform),
+                                Function.identity()),
+                        new ComponentDebugInfoSource<>("Transform", $ -> true, Transform.Holder::getTransform),
                         new ComponentDebugInfoSource<>("Snapping Points",
                                 $ -> true,
-                                it -> it.getSnappingPoints().map(PositionSupplier::getPosition).toArray(Vector[]::new)),
+                                it -> it.getSnappingPoints().map(PositionSupplier::getPosition).toArray()),
                         new ComponentDebugInfoSource<>("WireMesh",
                                 WireMeshContainer.class::isInstance,
-                                comp -> ((WireMeshContainer) comp).getWireMesh()));
+                                comp -> ((WireMeshContainer) comp).getWireMesh()),
+                        new ComponentDebugInfoSource<>("Wire Segments",
+                                Wire.class::isInstance,
+                                comp -> ((Wire) comp).getSegments().toArray()));
                 String                       name;
                 Predicate<EditorComponent>   check;
                 Function<EditorComponent, T> mapper;
