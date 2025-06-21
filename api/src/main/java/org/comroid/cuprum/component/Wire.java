@@ -9,13 +9,13 @@ import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.comroid.api.data.Vector;
 import org.comroid.cuprum.component.model.abstr.SimulationComponent;
-import org.comroid.cuprum.component.model.abstr.WireMeshContainer;
+import org.comroid.cuprum.component.model.abstr.WireMeshPart;
 import org.comroid.cuprum.component.model.basic.Conductive;
 import org.comroid.cuprum.editor.render.RenderObjectAdapter;
 import org.comroid.cuprum.editor.render.UniformRenderObject;
 import org.comroid.cuprum.model.PositionSupplier;
 import org.comroid.cuprum.physics.Material;
-import org.comroid.cuprum.simulation.WireMesh;
+import org.comroid.cuprum.simulation.WireMeshNode;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -52,24 +52,23 @@ public interface Wire extends SimulationComponent, Conductive {
     @RequiredArgsConstructor
     @ToString(exclude = { "wire", "wireMesh" }, doNotUseGetters = true)
     @EqualsAndHashCode(exclude = { "wire", "wireMesh" }, doNotUseGetters = true)
-    class Segment implements Conductive, WireMeshContainer, PositionSupplier {
+    class Segment implements Conductive, WireMeshPart, PositionSupplier {
         Wire      wire;
         Vector position;
-        @Setter @NonFinal @Nullable Double   length   = null;
-        @Setter @NonFinal @Nullable WireMesh wireMesh = null;
+        @Setter @NonFinal @Nullable Double       length       = null;
+        @Setter @NonFinal @Nullable WireMeshNode wireMeshNode = null;
 
-        public WireMesh getWireMesh() {
-            return !isWireMeshInitialized() ? wireMesh = new WireMesh(this, position) : wireMesh;
+        public WireMeshNode getWireMeshNode() {
+            return !isWireMeshNodeInitialized() ? wireMeshNode = new WireMeshNode(this, position) : wireMeshNode;
         }
 
         @Override
-        public boolean isWireMeshInitialized() {
-            return wireMesh != null;
+        public boolean isWireMeshNodeInitialized() {
+            return wireMeshNode != null;
         }
 
-        @Override
-        public void setWireMesh(WireMesh mesh, boolean recursive) {
-            setWireMesh(mesh);
+        public void setWireMeshNode(WireMeshNode mesh, boolean recursive) {
+            setWireMeshNode(mesh);
         }
 
         @Override

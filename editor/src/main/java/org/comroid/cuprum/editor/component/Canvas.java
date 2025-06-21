@@ -6,7 +6,7 @@ import org.comroid.api.func.util.Stopwatch;
 import org.comroid.api.func.util.Streams;
 import org.comroid.cuprum.component.Wire;
 import org.comroid.cuprum.component.model.abstr.EditorComponent;
-import org.comroid.cuprum.component.model.abstr.WireMeshContainer;
+import org.comroid.cuprum.component.model.abstr.WireMeshPart;
 import org.comroid.cuprum.editor.NativeEditor;
 import org.comroid.cuprum.editor.render.NativeRenderObject;
 import org.comroid.cuprum.model.PositionSupplier;
@@ -129,8 +129,8 @@ public class Canvas extends JPanel {
                         $ -> true,
                         it -> it.getSnappingPoints().map(PositionSupplier::getPosition).toArray()),
                 new ComponentDebugInfoSource<>("WireMesh",
-                        WireMeshContainer.class::isInstance,
-                        comp -> ((WireMeshContainer) comp).getWireMesh()),
+                        WireMeshPart.class::isInstance,
+                        comp -> ((WireMeshPart) comp).getWireMeshNode()),
                 new ComponentDebugInfoSource<>("Wire Segments",
                         Wire.class::isInstance,
                         comp -> ((Wire) comp).getSegments().toArray()));

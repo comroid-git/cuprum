@@ -6,33 +6,33 @@ import lombok.ToString;
 import lombok.experimental.NonFinal;
 import org.comroid.cuprum.component.model.abstr.SimulationComponent;
 import org.comroid.cuprum.model.ITransform;
-import org.comroid.cuprum.simulation.WireMesh;
+import org.comroid.cuprum.simulation.WireMeshNode;
 
 @Data
 @ToString(doNotUseGetters = true)
 @EqualsAndHashCode(doNotUseGetters = true)
 public abstract class SimulationComponentBase implements SimulationComponent {
-    protected           ITransform transform;
-    protected @NonFinal WireMesh   wireMesh = null;
+    protected           ITransform   transform;
+    protected @NonFinal WireMeshNode wireMeshNode = null;
 
     public SimulationComponentBase(ITransform transform) {
         this.transform = transform;
     }
 
-    public final WireMesh getWireMesh() {
-        return !isWireMeshInitialized() ? wireMesh = new WireMesh(this, getPosition()) : wireMesh;
+    public final WireMeshNode getWireMeshNode() {
+        return !isWireMeshNodeInitialized() ? wireMeshNode = new WireMeshNode(this, getPosition()) : wireMeshNode;
     }
 
     @Override
-    public boolean isWireMeshInitialized() {
-        return wireMesh != null;
+    public boolean isWireMeshNodeInitialized() {
+        return wireMeshNode != null;
     }
 
-    public final void setWireMesh(WireMesh wireMesh, boolean recursive) {
-        if (recursive && isWireMeshInitialized() && !this.wireMesh.equals(wireMesh)) {
-            wireMesh.addAll(this.wireMesh);
-            wireMesh.clear();
+    public final void setWireMeshNode(WireMeshNode wireMeshNode, boolean recursive) {
+        if (recursive && isWireMeshNodeInitialized() && !this.wireMeshNode.equals(wireMeshNode)) {
+            wireMeshNode.addAll(this.wireMeshNode);
+            wireMeshNode.clear();
         }
-        this.wireMesh = wireMesh;
+        this.wireMeshNode = wireMeshNode;
     }
 }

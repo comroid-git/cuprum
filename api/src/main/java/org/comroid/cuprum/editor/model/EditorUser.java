@@ -124,7 +124,7 @@ public class EditorUser {
                 var snap = editor.getSnappingPoint();
                 if (snap == null) return;
                 var comp = snap.getComponent();
-                if (comp instanceof SimulationComponent simComp && !simComp.getWireMesh().remove(simComp))
+                if (comp instanceof SimulationComponent simComp && !simComp.getWireMeshNode().remove(simComp))
                     throw new RuntimeException("Could not remove component %s from its WireMesh".formatted(simComp));
                 break;
         }
