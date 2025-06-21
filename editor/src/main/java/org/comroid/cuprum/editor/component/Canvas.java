@@ -28,7 +28,7 @@ public class Canvas extends JPanel {
 
     public Canvas(NativeEditor nativeEditor) {
         this.nativeEditor = nativeEditor;
-        stopwatch         = new Stopwatch(this.nativeEditor);
+        this.stopwatch    = new Stopwatch(this.nativeEditor);
     }
 
     @Override
@@ -43,10 +43,10 @@ public class Canvas extends JPanel {
         g2.drawString(String.format("FPS: %.0f (%.2fms)", 1_000_000_000f / frameTimeNanos, frameTimeNanos / 1_000_000f),
                 10,
                 20);
-        g2.drawString(String.format("Position: %.0f %.0f",
-                nativeEditor.getUser().getCursor().getPosition().getX(),
-                nativeEditor.getUser().getCursor().getPosition().getY()), 10, 30);
-        g2.drawString(String.format("Mode: %s", nativeEditor.getUser().getMode()), 10, 40);
+        var user   = nativeEditor.getUser();
+        var cursor = user.getCursor().getPosition();
+        g2.drawString(String.format("Position: %.0f %.0f", cursor.getX(), cursor.getY()), 10, 30);
+        g2.drawString(String.format("Mode: %s", user.getMode()), 10, 40);
 
         drawDebugInfo(g2);
         drawGrid(g2);
