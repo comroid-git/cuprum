@@ -160,8 +160,15 @@ public class NativeEditor extends JFrame implements Editor {
 
                 if (component == null) return;
                 for (var infoSource : ComponentDebugInfoSource.ALL)
-                    if (infoSource.check.test(component)) g2.drawString("%s: %s".formatted(infoSource.name,
-                            infoSource.mapper.apply(component)), 10, offset += 10);
+                    if (infoSource.check.test(component)) {
+                        var value = infoSource.mapper.apply(component);
+                        g2.drawString("%s: %s".formatted(infoSource.name,
+                                value.getClass().isArray() || value instanceof Iterable
+                                ? Arrays.toString(value instanceof Iterable<?> iter
+                                                  ? Streams.of(iter).toArray()
+                                                  : (Object[]) value)
+                                : value), 10, offset += 10);
+                    }
             }
 
             private void drawGrid(Graphics2D g2) {
