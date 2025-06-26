@@ -6,5 +6,5 @@ public interface CommonContact {
     /**
      * @return common contact
      */
-    ConnectionPoint getCommon();
+    ConnectionPoint getCommonContact();
 }

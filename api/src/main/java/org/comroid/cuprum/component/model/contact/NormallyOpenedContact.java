@@ -7,5 +7,5 @@ public interface NormallyOpenedContact extends CommonContact {
     /**
      * @return normally opened contact
      */
-    @Nullable ConnectionPoint getNormallyOpened();
+    @Nullable ConnectionPoint getNormallyOpenedContact();
 }
