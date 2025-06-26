@@ -5,16 +5,21 @@ import org.comroid.cuprum.component.model.abstr.CuprumComponent;
 import org.comroid.cuprum.component.model.abstr.EditorComponent;
 import org.comroid.cuprum.component.model.abstr.ElectronicComponent;
 import org.comroid.cuprum.component.model.abstr.SimulationComponent;
+import org.comroid.cuprum.component.model.abstr.SnappableComponent;
+import org.comroid.cuprum.component.model.abstr.WireMeshPart;
 import org.comroid.cuprum.editor.model.SnappingPoint;
 import org.comroid.cuprum.editor.model.ViewContainer;
 import org.comroid.cuprum.editor.render.RenderObjectAdapter;
+import org.comroid.cuprum.model.ITransform;
 import org.comroid.cuprum.model.PositionSupplier;
 import org.comroid.cuprum.simulation.WireMeshNode;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public interface Editor extends ViewContainer {
@@ -44,15 +49,39 @@ public interface Editor extends ViewContainer {
 
     boolean remove(SimulationComponent component);
 
-    default void rescanMesh(ElectronicComponent newComponent, PositionSupplier position) {
-        var overlaps = getWireMeshComponents().filter(Predicate.not(newComponent::equals))
-                .flatMap(wmc -> newComponent.getSnappingPoints().flatMap(src -> wmc.findOverlap(src)))
-                .toList();
-        if (overlaps.isEmpty()) return;
-        WireMeshNode mesh = newComponent.getWireMeshNode();
-        for (var overlap : overlaps)
-            mesh = mesh.integrate(overlap);
-        newComponent.setWireMeshNode(mesh);
-        mesh.checkSuspicious();
+    default void rescanMesh() {
+        getWireMeshComponents().flatMap(SnappableComponent::getSnappingPoints).forEach(this::rescanMesh);
+    }
+
+    default void rescanMesh(PositionSupplier trigger) {
+        var position = trigger.getPosition();
+
+        // find all parts at this trigger
+        var parts = getWireMeshComponents().flatMap(wmc -> wmc.findOverlap(position))
+                .map(WireMeshNode.OverlapPoint::component)
+                .collect(Collectors.toUnmodifiableSet());
+
+        // skip if there is no parts
+        if (parts.isEmpty() || (parts.stream().allMatch(trigger::equals))) return;
+
+        // find or create a WireMeshNode
+        var any = parts.stream().findAny().orElseThrow();
+        var meshNode = parts.stream()
+                .filter(WireMeshPart::isWireMeshNodeInitialized)
+                .findAny()
+                .map(WireMeshPart::getWireMeshNode)
+                // try create new WireMeshNode at any's position
+                .or(() -> Optional.of(new WireMeshNode(any, any.as(ITransform.class).assertion().getPosition())))
+                // validate that the WireMeshNode is actually at this position
+                .filter(wmn -> wmn.getInitPosition().equals(position))
+                // otherwise just make a blank WireMeshNode
+                .orElseGet(() -> new WireMeshNode(any, position));
+
+        // set WireMeshNode for new components
+        //noinspection SuspiciousMethodCalls
+        parts.stream().filter(Predicate.not(meshNode::contains)).forEach(wmp -> wmp.setWireMeshNode(meshNode));
+
+        // report node if it contains components at weird positions
+        meshNode.checkSuspicious();
     }
 }

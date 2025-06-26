@@ -33,7 +33,7 @@ public class WireMeshNode extends HashSet<WireMeshNode.OverlapPoint> implements 
 
     @Override
     public boolean contains(Object o) {
-        return find(o).filter(o::equals).isPresent();
+        return find(o).isPresent();
     }
 
     @Override
@@ -64,21 +64,6 @@ public class WireMeshNode extends HashSet<WireMeshNode.OverlapPoint> implements 
     @Override
     public String toString() {
         return "WireMesh{}";
-    }
-
-    public WireMeshNode integrate(OverlapPoint overlap) {
-        var          component = overlap.component;
-        WireMeshNode it        = this, other = component.isWireMeshNodeInitialized()
-                                               ? component.getWireMeshNode()
-                                               : null;
-
-        if (other != null && !other.isEmpty() && ((other != null && it.isEmpty()) || !it.equals(other)))
-            // try other if we only contain ourselves
-            component.setWireMeshNode(it = other);
-
-        // dont forget to add component to mesh
-        it.add(overlap);
-        return it;
     }
 
     public void checkSuspicious() {

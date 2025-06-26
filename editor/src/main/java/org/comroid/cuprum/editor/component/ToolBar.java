@@ -12,10 +12,12 @@ import java.awt.event.ActionListener;
 @EqualsAndHashCode(callSuper = true)
 public class ToolBar extends MenuBar {
     FileMenu fileMenu;
+    EditMenu editMenu;
     ModeMenu modeMenu;
 
     public ToolBar() {
         add(fileMenu = new FileMenu());
+        add(editMenu = new EditMenu());
         add(modeMenu = new ModeMenu());
     }
 
@@ -47,6 +49,33 @@ public class ToolBar extends MenuBar {
             }
 
             public abstract void fileNew();
+        }
+    }
+
+    @Value
+    @EqualsAndHashCode(callSuper = true)
+    public static class EditMenu extends Menu {
+        MenuItem rescan;
+
+        EditMenu() {
+            super("Edit");
+
+            add(rescan = new MenuItem("Rescan"));
+        }
+
+        @Value
+        @NonFinal
+        public abstract class Listener implements ActionListener {
+            {
+                addActionListener(this);
+            }
+
+            @Override
+            public final void actionPerformed(ActionEvent e) {
+                invoke(rescan, e, this::editRescan);
+            }
+
+            public abstract void editRescan();
         }
     }
 

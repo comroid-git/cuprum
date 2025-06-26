@@ -32,7 +32,7 @@ public interface Wire extends SimulationComponent, Conductive {
 
     @Override
     default Stream<PositionSupplier> getSnappingPoints() {
-        return Stream.concat(Stream.of(this), getSegments().stream());
+        return Stream.<PositionSupplier>concat(Stream.of(this), getSegments().stream()).distinct();
     }
 
     @Override

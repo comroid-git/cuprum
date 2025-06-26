@@ -116,7 +116,7 @@ public class EditorUser {
 
                 component.setTransform(new Transform(position));
                 editor.add(component);
-                editor.rescanMesh(component, source);
+                editor.rescanMesh(component);
                 this.component = null;
                 break;
 
@@ -146,7 +146,7 @@ public class EditorUser {
                 //if (shift) wire.addSegment(new Wire.Segment(wire, position));
                 if (!wire.getSegments().isEmpty()) {
                     editor.add(component);
-                    component.getSnappingPoints().forEach(snap -> editor.rescanMesh(component, snap));
+                    component.getSnappingPoints().forEach(editor::rescanMesh);
                 }
                 setMode(shift ? EditorMode.TOOL_WIRE : EditorMode.INTERACT);
 

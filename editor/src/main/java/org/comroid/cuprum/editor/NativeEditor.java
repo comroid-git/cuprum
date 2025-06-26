@@ -91,6 +91,12 @@ public class NativeEditor extends JFrame implements Editor {
                 clear();
             }
         };
+        toolbar.getEditMenu().new Listener() {
+            @Override
+            public void editRescan() {
+                rescanMesh();
+            }
+        };
         toolbar.getModeMenu().new Listener() {
             @Override
             public void modeInteract() {
