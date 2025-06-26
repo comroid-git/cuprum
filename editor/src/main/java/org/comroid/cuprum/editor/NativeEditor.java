@@ -281,7 +281,6 @@ public class NativeEditor extends JFrame implements Editor {
 
     @Override
     public boolean remove(SimulationComponent component) {
-        // todo: remove component from meshes
         synchronized (renderObjects) {
             return component.removeFromAncestors() & cuprumComponents.remove(component) & renderObjects.remove(component) != null;
         }
