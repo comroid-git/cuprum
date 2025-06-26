@@ -2,18 +2,27 @@ package org.comroid.cuprum.editor.render.impl;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import org.comroid.api.data.Vector;
 import org.comroid.cuprum.component.Wire;
 import org.comroid.cuprum.editor.NativeEditor;
 import org.comroid.cuprum.editor.component.WireLine;
 import org.comroid.cuprum.editor.render.NativeRenderObject;
+import org.comroid.cuprum.editor.render.util.GraphicsUtils;
+import org.comroid.cuprum.model.ITransform;
+import org.comroid.cuprum.model.PositionSupplier;
+import org.comroid.cuprum.simulation.component.WireImpl;
 
 import java.awt.*;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
 public class NativeWireLine extends NativeRenderObject<Wire> implements WireLine {
-    public NativeWireLine(Wire component) {
-        super(component);
+    public static Wire simple(ITransform basePosCom, Vector secondPosRel) {
+        return new WireImpl(basePosCom, PositionSupplier.of(secondPosRel));
+    }
+
+    public NativeWireLine(Wire wire) {
+        super(wire);
     }
 
     @Override
@@ -27,8 +36,7 @@ public class NativeWireLine extends NativeRenderObject<Wire> implements WireLine
         while (iter.hasNext()) {
             var posB = iter.next();
 
-            g.setStroke(new BasicStroke((float) component.getCrossSection()));
-            g.setColor(component.getMaterial().color);
+            GraphicsUtils.prepareConducitveGraphics(component, g);
             g.drawLine((int) posA.getX(), (int) posA.getY(), (int) posB.getX(), (int) posB.getY());
 
             posA = posB;

@@ -14,8 +14,8 @@ import java.awt.*;
 public class NativeSolderPointCircle extends NativeRenderObject<ConnectionPoint> implements SolderPointCircle {
     public static final int DIAMETER = 8;
 
-    public NativeSolderPointCircle(ConnectionPoint component) {
-        super(component);
+    public NativeSolderPointCircle(ConnectionPoint solderPoint) {
+        super(solderPoint);
     }
 
     @Override

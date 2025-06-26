@@ -6,7 +6,9 @@ import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.comroid.cuprum.component.Wire;
 import org.comroid.cuprum.model.ITransform;
+import org.comroid.cuprum.model.PositionSupplier;
 import org.comroid.cuprum.physics.Material;
+import org.comroid.cuprum.simulation.model.SimulationComponentBase;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -22,7 +24,13 @@ public class WireImpl extends SimulationComponentBase implements Wire {
     @NonFinal @Nullable Material material;
     @NonFinal @Nullable Double   crossSection;
 
-    public WireImpl(ITransform transform, double crossSection, Material material) {
+    public WireImpl(ITransform transform, PositionSupplier relativeSecondPoint) {
+        this(transform, Double.NaN, Material.NEGLIGIBLE);
+
+        addSegment(new Segment(this, relativeSecondPoint));
+    }
+
+    public WireImpl(ITransform transform, double crossSection, @Nullable Material material) {
         super(transform);
 
         this.crossSection = crossSection;

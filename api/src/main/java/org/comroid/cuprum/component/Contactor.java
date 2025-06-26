@@ -1,13 +1,11 @@
 package org.comroid.cuprum.component;
 
 import org.comroid.cuprum.component.model.abstr.EditorComponent;
-import org.comroid.cuprum.component.model.abstr.SnappableComponent;
 import org.comroid.cuprum.component.model.basic.Conductive;
 import org.comroid.cuprum.component.model.contact.AlternatingContacts;
 import org.comroid.cuprum.component.model.operational.DynamicallyOperated;
 import org.comroid.cuprum.component.model.operational.OperatorChild;
 import org.comroid.cuprum.physics.Material;
-import org.comroid.cuprum.simulation.ElectricContext;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
@@ -48,8 +46,8 @@ public interface Contactor
                 .orElseThrow();
     }
 
-    default SnappableComponent getActiveOutputContact(ElectricContext ctx) {
-        return isOperated(ctx) ? getNormallyOpenedContact() : getNormallyClosedContact();
+    default ConnectionPoint getActiveOutputContact() {
+        return isOperated() ? getNormallyOpenedContact() : getNormallyClosedContact();
     }
 
     enum Type implements Predicate<Contactor> {

@@ -1,4 +1,4 @@
-package org.comroid.cuprum.simulation.component;
+package org.comroid.cuprum.simulation.model;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
