@@ -5,5 +5,5 @@ import org.comroid.cuprum.model.PositionSupplier;
 import java.util.stream.Stream;
 
 public interface SnappableComponent extends CuprumComponent {
-    Stream<PositionSupplier> getSnappingPoints();
+    Stream<? extends PositionSupplier> getSnappingPoints();
 }

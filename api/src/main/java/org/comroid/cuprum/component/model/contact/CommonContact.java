@@ -1,10 +1,10 @@
 package org.comroid.cuprum.component.model.contact;
 
-import org.comroid.cuprum.component.ConnectionPoint;
+import org.comroid.cuprum.component.model.abstr.SnappableComponent;
 
 public interface CommonContact {
     /**
      * @return common contact
      */
-    ConnectionPoint getCommonContact();
+    SnappableComponent getCommonContact();
 }

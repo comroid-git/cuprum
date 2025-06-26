@@ -8,7 +8,9 @@ import java.util.stream.Stream;
 public interface RenderComponent<T extends EditorComponent> extends UniformRenderObject {
     T getComponent();
 
-    Stream<Vector> getVertices();
+    default Stream<Vector> getVertices() {
+        return Stream.of(getPosition());
+    }
 
     @Override
     default boolean outOfView() {

@@ -55,6 +55,16 @@ public class Transform implements ITransform {
         ITransform transform;
         @NonFinal @Setter Vector positionOffset, scaleOffset;
 
+        public Relative(ITransform transform, Vector positionOffset) {
+            this(transform, positionOffset, Vector.One);
+        }
+
+        public Relative(ITransform transform, Vector positionOffset, Vector scaleOffset) {
+            this.transform      = transform;
+            this.positionOffset = positionOffset;
+            this.scaleOffset    = scaleOffset;
+        }
+
         @Override
         public Vector getPosition() {
             return transform.getPosition().addi(positionOffset);
