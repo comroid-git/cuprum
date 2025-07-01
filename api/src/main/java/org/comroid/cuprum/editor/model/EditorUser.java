@@ -56,6 +56,11 @@ public class EditorUser {
         };
     }
 
+    public synchronized void setObjectMode(@Nullable Supplier<SimulationComponent> componentCtor) {
+        this.componentCtor = componentCtor;
+        this.mode          = componentCtor == null ? EditorMode.INTERACT : EditorMode.TOOL_OBJECT;
+    }
+
     public synchronized @Nullable EditorComponent createComponent() {
         try {
             return componentCtor != null ? component = componentCtor.get() : null;

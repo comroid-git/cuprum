@@ -117,12 +117,16 @@ public class ToolBar extends MenuBar {
         public static class InsertToolMenu extends PopupMenu {
             MenuItem toolWire;
             MenuItem toolSolder;
+            MenuItem toolContactNO;
+            MenuItem toolContactNC;
 
             InsertToolMenu() {
                 super("Insert...");
 
                 add(toolWire = new MenuItem("Wire"));
                 add(toolSolder = new MenuItem("Solder"));
+                add(toolContactNO = new MenuItem("NO Contact"));
+                add(toolContactNC = new MenuItem("NC Contact"));
             }
 
             @Value
@@ -136,11 +140,17 @@ public class ToolBar extends MenuBar {
                 public final void actionPerformed(ActionEvent e) {
                     invoke(toolWire, e, this::toolWire);
                     invoke(toolSolder, e, this::toolSolder);
+                    invoke(toolContactNC, e, this::toolContactNC);
+                    invoke(toolContactNO, e, this::toolContactNO);
                 }
 
                 public abstract void toolWire();
 
                 public abstract void toolSolder();
+
+                public abstract void toolContactNC();
+
+                public abstract void toolContactNO();
             }
         }
     }

@@ -10,7 +10,6 @@ import org.comroid.api.func.util.Streams;
 import org.comroid.cuprum.component.ConnectionPoint;
 import org.comroid.cuprum.component.Contactor;
 import org.comroid.cuprum.component.ContactorCoil;
-import org.comroid.cuprum.component.model.abstr.SnappableComponent;
 import org.comroid.cuprum.model.ITransform;
 import org.comroid.cuprum.model.PositionSupplier;
 import org.comroid.cuprum.simulation.model.SimulationComponentBase;
@@ -41,15 +40,15 @@ public class ContactorImpl extends SimulationComponentBase implements Contactor 
         return new ContactorImpl(transform, createNO(transform), createNC(transform));
     }
 
-    SnappableComponent commonContact;
-    @Nullable SnappableComponent normallyOpenedContact;
-    @Nullable SnappableComponent normallyClosedContact;
-    @Nullable ContactorCoil      parent;
+    ConnectionPoint commonContact;
+    @Nullable ConnectionPoint normallyOpenedContact;
+    @Nullable ConnectionPoint normallyClosedContact;
+    @Nullable ContactorCoil   parent;
     boolean manuallyOperated;
 
     private ContactorImpl(
-            ITransform transform, @Nullable SnappableComponent normallyOpenedContact,
-            @Nullable SnappableComponent normallyClosedContact
+            ITransform transform, @Nullable ConnectionPoint normallyOpenedContact,
+            @Nullable ConnectionPoint normallyClosedContact
     ) {
         super(transform);
 

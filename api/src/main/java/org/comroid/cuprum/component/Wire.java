@@ -53,15 +53,15 @@ public interface Wire extends SimulationComponent, Conductive {
     @ToString(exclude = { "wire", "wireMeshNode" }, doNotUseGetters = true)
     @EqualsAndHashCode(exclude = { "wire", "wireMeshNode" }, doNotUseGetters = true)
     class Segment implements Conductive, WireMeshPart, PositionSupplier {
-        Wire wire;
-        PositionSupplier position;
+        Wire   wire;
+        Vector position;
         @NonFinal @Nullable Double length = null, crossSection = null;
         @NonFinal @Nullable Material material = null;
         @Setter @NonFinal @Nullable WireMeshNode wireMeshNode = null;
 
         public WireMeshNode getWireMeshNode() {
             return !isWireMeshNodeInitialized()
-                   ? wireMeshNode = new WireMeshNode(this, position.getPosition())
+                   ? wireMeshNode = new WireMeshNode(this, position)
                    : wireMeshNode;
         }
 
@@ -79,8 +79,8 @@ public interface Wire extends SimulationComponent, Conductive {
             return Optional.ofNullable(length).orElseGet(() -> {
                 var segments = wire.getSegments();
                 var index    = segments.indexOf(this);
-                var prev = index == 0 ? wire.getPosition() : segments.get(index - 1).position.getPosition();
-                return Vector.dist(prev, position.getPosition());
+                var prev = index == 0 ? wire.getPosition() : segments.get(index - 1).position;
+                return Vector.dist(prev, position);
             });
         }
 

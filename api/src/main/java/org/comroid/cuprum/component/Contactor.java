@@ -1,6 +1,6 @@
 package org.comroid.cuprum.component;
 
-import org.comroid.cuprum.component.model.abstr.EditorComponent;
+import org.comroid.cuprum.component.model.abstr.SimulationComponent;
 import org.comroid.cuprum.component.model.basic.Conductive;
 import org.comroid.cuprum.component.model.contact.AlternatingContacts;
 import org.comroid.cuprum.component.model.operational.DynamicallyOperated;
@@ -13,7 +13,7 @@ import java.util.Comparator;
 import java.util.function.Predicate;
 
 public interface Contactor
-        extends EditorComponent, AlternatingContacts, OperatorChild, DynamicallyOperated, Conductive {
+        extends SimulationComponent, AlternatingContacts, OperatorChild, DynamicallyOperated, Conductive {
     @Override
     default double getLength() {
         return 0;

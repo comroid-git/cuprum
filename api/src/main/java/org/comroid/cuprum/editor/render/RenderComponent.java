@@ -14,7 +14,7 @@ public interface RenderComponent<T extends EditorComponent> extends UniformRende
         return Stream.of(getPosition());
     }
 
-    default Collection<? extends RenderComponent<?>> getChildren() {
+    default Collection<? extends UniformRenderObject> getChildren() {
         return Collections.emptySet();
     }
 

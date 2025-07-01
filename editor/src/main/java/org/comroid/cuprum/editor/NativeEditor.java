@@ -19,6 +19,8 @@ import org.comroid.cuprum.editor.render.NativeRenderObject;
 import org.comroid.cuprum.editor.render.UniformRenderObject;
 import org.comroid.cuprum.editor.render.impl.SnappingMarker;
 import org.comroid.cuprum.model.PositionSupplier;
+import org.comroid.cuprum.simulation.component.ContactorImpl;
+import org.comroid.cuprum.spatial.Transform;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -118,6 +120,16 @@ public class NativeEditor extends JFrame implements Editor {
             @Override
             public void toolSolder() {
                 user.setMode(EditorMode.TOOL_SOLDER);
+            }
+
+            @Override
+            public void toolContactNC() {
+                user.setObjectMode(() -> ContactorImpl.createNormallyClosed(new Transform()));
+            }
+
+            @Override
+            public void toolContactNO() {
+                user.setObjectMode(() -> ContactorImpl.createNormallyOpened(new Transform()));
             }
         };
         setMenuBar(toolbar);

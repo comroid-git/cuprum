@@ -27,7 +27,7 @@ public class WireImpl extends SimulationComponentBase implements Wire {
     public WireImpl(ITransform transform, PositionSupplier relativeSecondPoint) {
         this(transform, Double.NaN, Material.NEGLIGIBLE);
 
-        addSegment(new Segment(this, relativeSecondPoint));
+        addSegment(new Segment(this, relativeSecondPoint.getPosition()));
     }
 
     public WireImpl(ITransform transform, double crossSection, @Nullable Material material) {
