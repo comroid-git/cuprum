@@ -47,13 +47,13 @@ public class EditorUser {
     }
 
     public synchronized void setMode(EditorMode mode) {
-        component     = null;
         componentCtor = switch (this.mode = mode) {
             case TOOL_WIRE -> EngineDelegate.INSTANCE::createWire;
             case TOOL_SOLDER -> EngineDelegate.INSTANCE::createConnectionPoint;
             case TOOL_OBJECT -> componentCtor;
             default -> null;
         };
+        component = componentCtor != null ? componentCtor.get() : null;
     }
 
     public synchronized void setObjectMode(@Nullable Supplier<SimulationComponent> componentCtor) {
