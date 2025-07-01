@@ -5,7 +5,7 @@ import org.comroid.cuprum.component.model.basic.Conductive;
 import java.awt.*;
 
 public final class GraphicsUtils {
-    public static void prepareConducitveGraphics(Conductive component, Graphics2D g) {
+    public static void prepareConductiveGraphics(Conductive component, Graphics2D g) {
         var crossSection = component.getCrossSection();
         g.setStroke(new BasicStroke(Double.isNaN(crossSection) ? 1.5f : (float) crossSection));
 

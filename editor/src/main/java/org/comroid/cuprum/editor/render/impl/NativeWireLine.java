@@ -36,7 +36,7 @@ public class NativeWireLine extends NativeRenderObject<Wire> implements WireLine
         while (iter.hasNext()) {
             var posB = iter.next();
 
-            GraphicsUtils.prepareConducitveGraphics(component, g);
+            GraphicsUtils.prepareConductiveGraphics(component, g);
             g.drawLine((int) posA.getX(), (int) posA.getY(), (int) posB.getX(), (int) posB.getY());
 
             posA = posB;

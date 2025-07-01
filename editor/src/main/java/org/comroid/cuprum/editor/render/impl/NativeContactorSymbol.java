@@ -35,7 +35,7 @@ public class NativeContactorSymbol extends NativeRenderObject<Contactor> {
 
     @Override
     public void paint(NativeEditor e, Graphics2D g) {
-        GraphicsUtils.prepareConducitveGraphics(component, g);
+        GraphicsUtils.prepareConductiveGraphics(component, g);
 
         super.paint(e, g);
 
