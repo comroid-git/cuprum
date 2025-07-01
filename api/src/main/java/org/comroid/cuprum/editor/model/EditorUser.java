@@ -121,8 +121,10 @@ public class EditorUser {
 
                 component.setTransform(new Transform(position));
                 editor.add(component);
-                editor.rescanMesh(component);
-                this.component = null;
+                component.getSnappingPoints().forEach(editor::rescanMesh);
+
+                setMode(shift ? getMode() : EditorMode.INTERACT);
+
                 break;
 
             case REMOVE:
