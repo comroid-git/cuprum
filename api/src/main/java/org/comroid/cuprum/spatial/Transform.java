@@ -14,7 +14,7 @@ import org.comroid.cuprum.model.ITransform;
 @NonFinal
 @ToString(of = { "position", "scale" })
 @EqualsAndHashCode(of = { "position", "scale" })
-public class Transform implements ITransform {
+public class Transform implements ITransform, Cloneable {
     @NonFinal @Setter Vector position, scale;
 
     public Transform() {
@@ -28,6 +28,12 @@ public class Transform implements ITransform {
     public Transform(Vector position, Vector scale) {
         this.position = position;
         this.scale    = scale;
+    }
+
+    @Override
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
+    public Transform clone() {
+        return new Transform(position.clone(), scale.clone());
     }
 
     public interface Holder extends ITransform {

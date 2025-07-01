@@ -119,7 +119,7 @@ public class EditorUser {
                     break;
                 }
 
-                component.setTransform(new Transform(position));
+                component.setTransform(cursor.clone());
                 editor.add(component);
                 component.getSnappingPoints().forEach(editor::rescanMesh);
 
