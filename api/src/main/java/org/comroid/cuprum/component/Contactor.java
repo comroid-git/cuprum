@@ -5,6 +5,8 @@ import org.comroid.cuprum.component.model.basic.Conductive;
 import org.comroid.cuprum.component.model.contact.AlternatingContacts;
 import org.comroid.cuprum.component.model.operational.DynamicallyOperated;
 import org.comroid.cuprum.component.model.operational.OperatorChild;
+import org.comroid.cuprum.editor.render.RenderObjectAdapter;
+import org.comroid.cuprum.editor.render.UniformRenderObject;
 import org.comroid.cuprum.physics.Material;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,6 +50,11 @@ public interface Contactor
 
     default ConnectionPoint getActiveOutputContact() {
         return isOperated() ? getNormallyOpenedContact() : getNormallyClosedContact();
+    }
+
+    @Override
+    default @Nullable UniformRenderObject createRenderObject(RenderObjectAdapter adapter) {
+        return adapter.createContactor(this);
     }
 
     enum Type implements Predicate<Contactor> {
