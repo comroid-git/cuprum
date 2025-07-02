@@ -1,5 +1,10 @@
 package org.comroid.cuprum.component;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.comroid.api.data.Vector;
 import org.comroid.cuprum.component.model.abstr.SimulationComponent;
 import org.comroid.cuprum.component.model.basic.Conductive;
 import org.comroid.cuprum.component.model.contact.AlternatingContacts;
@@ -7,7 +12,9 @@ import org.comroid.cuprum.component.model.operational.DynamicallyOperated;
 import org.comroid.cuprum.component.model.operational.OperatorChild;
 import org.comroid.cuprum.editor.render.RenderObjectAdapter;
 import org.comroid.cuprum.editor.render.UniformRenderObject;
+import org.comroid.cuprum.model.ITransform;
 import org.comroid.cuprum.physics.Material;
+import org.comroid.cuprum.spatial.Transform;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
@@ -48,6 +55,14 @@ public interface Contactor
                 .orElseThrow();
     }
 
+    default Type getActiveContactType() {
+        return switch (getContactorType()) {
+            case Common -> Type.Common;
+            case NormallyOpened, Alternating -> isOperated() ? Type.NormallyOpened : Type.NormallyClosed;
+            case NormallyClosed -> isOperated() ? Type.NormallyClosed : Type.NormallyOpened;
+        };
+    }
+
     default @Nullable ConnectionPoint getActiveOutputContact() {
         return isOperated() ? getNormallyOpenedContact() : getNormallyClosedContact();
     }
@@ -57,27 +72,36 @@ public interface Contactor
         return adapter.createContactor(this);
     }
 
+    @Getter
+    @RequiredArgsConstructor
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
     enum Type implements Predicate<Contactor> {
-        Dummy {
+        Common(new Vector.N2(0, 20)) {
             @Override
             public boolean test(Contactor contactor) {
                 return false;
             }
-        }, NormallyOpened {
+        }, NormallyOpened(new Vector.N2(0, -20)) {
             @Override
             public boolean test(Contactor contactor) {
                 return contactor.getNormallyOpenedContact() != null;
             }
-        }, NormallyClosed {
+        }, NormallyClosed(new Vector.N2(10, -20)) {
             @Override
             public boolean test(Contactor contactor) {
                 return contactor.getNormallyClosedContact() != null;
             }
-        }, Alternating {
+        }, Alternating(Vector.Zero) {
             @Override
             public boolean test(Contactor contactor) {
                 return NormallyOpened.test(contactor) && NormallyClosed.test(contactor);
             }
+        };
+
+        Vector offset;
+
+        public ITransform relative(ITransform transform) {
+            return new Transform.Relative(transform, offset);
         }
     }
 }

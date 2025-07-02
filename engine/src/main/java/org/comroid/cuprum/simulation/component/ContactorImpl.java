@@ -13,7 +13,6 @@ import org.comroid.cuprum.component.ContactorCoil;
 import org.comroid.cuprum.model.ITransform;
 import org.comroid.cuprum.model.PositionSupplier;
 import org.comroid.cuprum.simulation.model.SimulationComponentBase;
-import org.comroid.cuprum.spatial.Transform;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.stream.Stream;
@@ -23,21 +22,20 @@ import java.util.stream.Stream;
 @EqualsAndHashCode(callSuper = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public final class ContactorImpl extends SimulationComponentBase implements Contactor {
-    public static final Vector OFFSET_COM = new Vector.N2(0, 20);
-    public static final Vector OFFSET_NO  = new Vector.N2(0, -20);
-    public static final Vector OFFSET_NC  = new Vector.N2(10, -20);
-    public static final Vector REL_WIRES  = new Vector.N2(0, 5);
+    public static final Vector REL_WIRES = new Vector.N2(0, 5);
 
     public static Contactor createNormallyOpened(ITransform transform) {
-        return new ContactorImpl(transform, createNO(transform), null);
+        return new ContactorImpl(transform, create(Type.NormallyOpened, transform), null);
     }
 
     public static Contactor createNormallyClosed(ITransform transform) {
-        return new ContactorImpl(transform, null, createNC(transform));
+        return new ContactorImpl(transform, null, create(Type.NormallyClosed, transform));
     }
 
     public static Contactor createAlternating(ITransform transform) {
-        return new ContactorImpl(transform, createNO(transform), createNC(transform));
+        return new ContactorImpl(transform,
+                create(Type.NormallyOpened, transform),
+                create(Type.NormallyClosed, transform));
     }
 
     ConnectionPoint commonContact;
@@ -51,7 +49,7 @@ public final class ContactorImpl extends SimulationComponentBase implements Cont
     ) {
         super(transform);
 
-        this.commonContact         = createCOM(transform);
+        this.commonContact = create(Type.Common, transform);
         this.normallyOpenedContact = normallyOpenedContact;
         this.normallyClosedContact = normallyClosedContact;
     }
@@ -67,15 +65,7 @@ public final class ContactorImpl extends SimulationComponentBase implements Cont
         manuallyOperated = !manuallyOperated;
     }
 
-    private static ConnectionPoint createCOM(ITransform transform) {
-        return new SolderImpl(new Transform.Relative(transform, OFFSET_COM));
-    }
-
-    private static ConnectionPoint createNO(ITransform transform) {
-        return new SolderImpl(new Transform.Relative(transform, OFFSET_NO));
-    }
-
-    private static ConnectionPoint createNC(ITransform transform) {
-        return new SolderImpl(new Transform.Relative(transform, OFFSET_NC));
+    private static ConnectionPoint create(Type contactorType, ITransform transform) {
+        return new SolderImpl(contactorType.relative(transform));
     }
 }

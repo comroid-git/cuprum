@@ -41,7 +41,7 @@ public class NativeContactorSymbol extends NativeRenderObject<Contactor> {
 
         // paint contactor line
         var start = component.getCommonContact().getPosition().subi(ContactorImpl.REL_WIRES.negate());
-        var end   = component.getActiveOutputContact().getPosition().subi(ContactorImpl.REL_WIRES);
+        var end = component.getActiveContactType().relative(this).getPosition().subi(ContactorImpl.REL_WIRES);
         g.drawLine((int) start.getX(), (int) start.getY(), (int) end.getX(), (int) end.getY());
     }
 }
