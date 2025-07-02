@@ -48,7 +48,7 @@ public interface Contactor
                 .orElseThrow();
     }
 
-    default ConnectionPoint getActiveOutputContact() {
+    default @Nullable ConnectionPoint getActiveOutputContact() {
         return isOperated() ? getNormallyOpenedContact() : getNormallyClosedContact();
     }
 
