@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 @Setter
 @EqualsAndHashCode(callSuper = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ContactorImpl extends SimulationComponentBase implements Contactor {
+public final class ContactorImpl extends SimulationComponentBase implements Contactor {
     public static final Vector OFFSET_COM = new Vector.N2(0, 20);
     public static final Vector OFFSET_NO  = new Vector.N2(0, -20);
     public static final Vector OFFSET_NC  = new Vector.N2(10, -20);
