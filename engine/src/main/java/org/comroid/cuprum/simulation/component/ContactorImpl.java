@@ -41,9 +41,8 @@ public final class ContactorImpl extends SimulationComponentBase implements Cont
     }
 
     ConnectionPoint commonContact;
-    @Nullable ConnectionPoint normallyOpenedContact;
-    @Nullable ConnectionPoint normallyClosedContact;
-    @Nullable ContactorCoil   parent;
+    @Nullable ConnectionPoint normallyOpenedContact, normallyClosedContact;
+    @Nullable ContactorCoil parent;
     boolean manuallyOperated;
 
     private ContactorImpl(
